@@ -1,0 +1,33 @@
+{
+  "name": "@balena/pinejs-webresource-s3",
+  "version": "0.0.1",
+  "description": "A PineJS WebResource handler for storing & serving files on S3",
+  "main": "build/index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "npm run lint",
+    "prettify": "balena-lint -e ts --fix lib",
+    "lint": "balena-lint -e ts lib && npx tsc --noEmit",
+    "prepare": "node -e \"try { (await import('husky')).default() } catch (e) { if (e.code !== 'ERR_MODULE_NOT_FOUND') throw e }\" --input-type module"
+  },
+  "author": "Balena Inc. <hello@balena.io>",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@balena/lint": "^8.0.0",
+    "@balena/pinejs": "^16.0.0",
+    "@balena/sbvr-types": "^7.0.6",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.2",
+    "typescript": "^5.4.3"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.556.0",
+    "@aws-sdk/lib-storage": "^3.556.0",
+    "@aws-sdk/s3-request-presigner": "^3.556.0",
+    "memoizee": "^0.4.15",
+    "typed-error": "^3.2.2"
+  },
+  "versionist": {
+    "publishedAt": "2024-04-10T12:24:12.278Z"
+  }
+}
