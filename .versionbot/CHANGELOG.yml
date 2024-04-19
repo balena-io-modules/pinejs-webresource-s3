@@ -1,4 +1,15 @@
 - commits:
+    - subject: Add beginMultipartUpload/commitMultiPartUpload
+      hash: 8ac4f8e08b79392ed762d9732dd43bc5d94d6b71
+      body: ""
+      footer:
+        Change-type: minor
+        change-type: minor
+      author: Otavio Jacobi
+  version: 0.2.0
+  title: ""
+  date: 2024-04-19T19:10:20.002Z
+- commits:
     - subject: Add flowzone deployment
       hash: aeb1b8c276517b0241f02c9c20027153bb848f9a
       body: ""
