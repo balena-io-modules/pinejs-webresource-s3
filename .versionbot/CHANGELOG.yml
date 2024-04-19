@@ -1,0 +1,18 @@
+- commits:
+    - subject: Add flowzone deployment
+      hash: aeb1b8c276517b0241f02c9c20027153bb848f9a
+      body: ""
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: Otavio Jacobi
+    - subject: Add S3 Handler
+      hash: 2158a47e913f7021c34ec68b6e417ab4ef699f05
+      body: ""
+      footer:
+        Change-type: minor
+        change-type: minor
+      author: Otavio Jacobi
+  version: 0.1.0
+  title: ""
+  date: 2024-04-19T13:57:58.094Z
