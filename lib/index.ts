@@ -1,18 +1,18 @@
-import type { webResourceHandler } from '@balena/pinejs';
 import {
-	type S3ClientConfig,
-	type PutObjectCommandInput,
-	S3Client,
 	DeleteObjectCommand,
 	GetObjectCommand,
+	S3Client,
+	type PutObjectCommandInput,
+	type S3ClientConfig,
 } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import type { webResourceHandler } from '@balena/pinejs';
 
-import { randomUUID } from 'node:crypto';
 import type { WebResourceType as WebResource } from '@balena/sbvr-types';
-import { TypedError } from 'typed-error';
 import * as memoize from 'memoizee';
+import { randomUUID } from 'node:crypto';
+import { TypedError } from 'typed-error';
 
 export interface S3HandlerProps {
 	region: string;
