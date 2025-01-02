@@ -1,4 +1,22 @@
 - commits:
+    - subject: Add minimum supported node and npm versions
+      hash: 9f1afa83d3146e0e0ef8235089af6ec3d9c0f73f
+      body: ""
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: Otavio Jacobi
+    - subject: Bump target to ES2022
+      hash: 4cd5dc2dd56044638eb6aad0a3b70c80be9e6277
+      body: ""
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: Otavio Jacobi
+  version: 1.0.1
+  title: ""
+  date: 2025-01-02T15:32:49.434Z
+- commits:
     - subject: Convert to ESM
       hash: 9f55e86919d873e71a84d0e5359943f128aea15e
       body: ""
