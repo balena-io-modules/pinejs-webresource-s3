@@ -243,7 +243,7 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 		uploadId: string,
 		payload: BeginMultipartUploadPayload,
 	): Promise<UploadPart[]> {
-		const chunkSizesWithParts = await this.getChunkSizesWithParts(
+		const chunkSizesWithParts = this.getChunkSizesWithParts(
 			payload.size,
 			payload.chunk_size,
 		);
@@ -280,10 +280,10 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 		});
 	}
 
-	private async getChunkSizesWithParts(
+	private getChunkSizesWithParts(
 		size: number,
 		chunkSize: number,
-	): Promise<Array<Pick<UploadPart, 'chunkSize' | 'partNumber'>>> {
+	): Array<Pick<UploadPart, 'chunkSize' | 'partNumber'>> {
 		const chunkSizesWithParts = [];
 		let partNumber = 1;
 		let remainingSize = size;
