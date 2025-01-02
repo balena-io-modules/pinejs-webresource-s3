@@ -14,7 +14,7 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import type { webResourceHandler } from '@balena/pinejs';
 
 import type { WebResourceType as WebResource } from '@balena/sbvr-types';
-import * as memoize from 'memoizee';
+import memoize from 'memoizee';
 import { randomUUID } from 'node:crypto';
 import type { AnyObject } from 'pinejs-client-core';
 import { TypedError } from 'typed-error';
@@ -243,7 +243,7 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 		uploadId: string,
 		payload: BeginMultipartUploadPayload,
 	): Promise<UploadPart[]> {
-		const chunkSizesWithParts = await this.getChunkSizesWithParts(
+		const chunkSizesWithParts = this.getChunkSizesWithParts(
 			payload.size,
 			payload.chunk_size,
 		);
@@ -280,10 +280,10 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 		});
 	}
 
-	private async getChunkSizesWithParts(
+	private getChunkSizesWithParts(
 		size: number,
 		chunkSize: number,
-	): Promise<Array<Pick<UploadPart, 'chunkSize' | 'partNumber'>>> {
+	): Array<Pick<UploadPart, 'chunkSize' | 'partNumber'>> {
 		const chunkSizesWithParts = [];
 		let partNumber = 1;
 		let remainingSize = size;
