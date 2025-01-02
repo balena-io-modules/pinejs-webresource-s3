@@ -1,4 +1,29 @@
 - commits:
+    - subject: Update dependencies
+      hash: 92d1e2bdcacc5ac98a755b3c7145a3940bfa413e
+      body: ""
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: Otavio Jacobi
+    - subject: Use node16 module resolution in tsconfig
+      hash: 1821181ebcaf0f3dfd3f720c47d10ebfb1d6b247
+      body: ""
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: Otavio Jacobi
+    - subject: Remove deprecated husky script header
+      hash: 9738af66e1efb88d76bdcad8f7748bd9e8cbffe3
+      body: ""
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: Otavio Jacobi
+  version: 0.2.1
+  title: ""
+  date: 2025-01-02T12:58:51.221Z
+- commits:
     - subject: Add beginMultipartUpload/commitMultiPartUpload
       hash: 8ac4f8e08b79392ed762d9732dd43bc5d94d6b71
       body: ""
