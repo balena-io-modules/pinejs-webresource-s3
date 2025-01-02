@@ -14,7 +14,7 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import type { webResourceHandler } from '@balena/pinejs';
 
 import type { WebResourceType as WebResource } from '@balena/sbvr-types';
-import * as memoize from 'memoizee';
+import memoize from 'memoizee';
 import { randomUUID } from 'node:crypto';
 import type { AnyObject } from 'pinejs-client-core';
 import { TypedError } from 'typed-error';

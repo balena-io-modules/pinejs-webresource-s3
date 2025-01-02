@@ -2,6 +2,7 @@
   "name": "@balena/pinejs-webresource-s3",
   "version": "0.2.0",
   "description": "A PineJS WebResource handler for storing & serving files on S3",
+  "type": "commonjs",
   "main": "build/index.js",
   "scripts": {
     "build": "tsc",
