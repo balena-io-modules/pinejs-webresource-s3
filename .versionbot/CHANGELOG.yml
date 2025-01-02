@@ -1,4 +1,15 @@
 - commits:
+    - subject: Convert to ESM
+      hash: 9f55e86919d873e71a84d0e5359943f128aea15e
+      body: ""
+      footer:
+        Change-type: major
+        change-type: major
+      author: Otavio Jacobi
+  version: 1.0.0
+  title: ""
+  date: 2025-01-02T13:10:12.237Z
+- commits:
     - subject: Update dependencies
       hash: 92d1e2bdcacc5ac98a755b3c7145a3940bfa413e
       body: ""
