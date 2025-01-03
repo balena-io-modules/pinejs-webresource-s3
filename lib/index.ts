@@ -11,13 +11,12 @@ import {
 } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import type { webResourceHandler } from '@balena/pinejs';
+import { webResourceHandler } from '@balena/pinejs';
 
 import type { WebResourceType as WebResource } from '@balena/sbvr-types';
 import memoize from 'memoizee';
 import { randomUUID } from 'node:crypto';
 import type { AnyObject } from 'pinejs-client-core';
-import { TypedError } from 'typed-error';
 
 // TODO: remove me and import from pinejs once v17 is out
 interface BeginMultipartUploadPayload {
@@ -60,13 +59,6 @@ export interface S3HandlerProps {
 const normalizeHref = (href: string) => {
 	return href.split('?')[0];
 };
-
-export class FileSizeExceededError extends TypedError {
-	name = 'FileSizeExceededError';
-	constructor(maxSize: number) {
-		super(`File size exceeded the limit of ${maxSize} bytes.`);
-	}
-}
 
 export class S3Handler implements webResourceHandler.WebResourceHandler {
 	private readonly config: S3ClientConfig;
@@ -131,7 +123,7 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 		} catch (err: any) {
 			resource.stream.resume();
 			if (size > this.maxFileSize) {
-				throw new FileSizeExceededError(this.maxFileSize);
+				throw new webResourceHandler.FileSizeExceededError(this.maxFileSize);
 			}
 			throw err;
 		}
