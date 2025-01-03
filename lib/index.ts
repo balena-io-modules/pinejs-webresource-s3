@@ -16,7 +16,6 @@ import { webResourceHandler } from '@balena/pinejs';
 import type { WebResourceType as WebResource } from '@balena/sbvr-types';
 import memoize from 'memoizee';
 import { randomUUID } from 'node:crypto';
-import type { AnyObject } from 'pinejs-client-core';
 
 // TODO: remove me and import from pinejs once v17 is out
 interface BeginMultipartUploadPayload {
@@ -42,7 +41,7 @@ interface CommitMultipartUploadPayload {
 	fileKey: string;
 	uploadId: string;
 	filename: string;
-	providerCommitData?: AnyObject;
+	providerCommitData?: Record<string, any>;
 }
 
 export interface S3HandlerProps {
