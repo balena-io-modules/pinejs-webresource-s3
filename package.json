@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc",
     "test": "npm run lint",
-    "prettify": "balena-lint -e ts --fix lib",
+    "lint-fix": "balena-lint -e ts --fix lib",
     "lint": "balena-lint -e ts lib && npx tsc --noEmit",
     "prepare": "node -e \"try { (await import('husky')).default() } catch (e) { if (e.code !== 'ERR_MODULE_NOT_FOUND') throw e }\" --input-type module"
   },
