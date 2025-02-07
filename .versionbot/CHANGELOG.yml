@@ -1,4 +1,15 @@
 - commits:
+    - subject: Add sanity unit tests
+      hash: 9a755a6f51b21ce55fc2b583528667841393984e
+      body: ""
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: Otavio Jacobi
+  version: 1.0.3
+  title: ""
+  date: 2025-02-07T17:35:46.493Z
+- commits:
     - subject: Avoid using typing from pinejs-client-core
       hash: 1af3c5742ad855ee923d2f44581a2688b968f49a
       body: |
