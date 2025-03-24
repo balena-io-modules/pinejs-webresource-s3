@@ -1,4 +1,15 @@
 - commits:
+    - subject: Mark pinejs 21.x as compatible
+      hash: 2aa44949589b4b02ac7dac07ac36ac1aec9aeb32
+      body: ""
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: Pagan Gazzard
+  version: 1.0.4
+  title: ""
+  date: 2025-03-24T11:51:04.544Z
+- commits:
     - subject: Add sanity unit tests
       hash: 9a755a6f51b21ce55fc2b583528667841393984e
       body: ""
