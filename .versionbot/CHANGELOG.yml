@@ -1,4 +1,16 @@
 - commits:
+    - subject: Update dependency sinon to v20
+      hash: 76a8ab27cb36df23220e51385081d356a5540295
+      body: |
+        Update sinon from 19.0.5 to 20.0.0
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: balena-renovate[bot]
+  version: 1.0.5
+  title: ""
+  date: 2025-04-02T14:05:40.305Z
+- commits:
     - subject: Mark pinejs 21.x as compatible
       hash: 2aa44949589b4b02ac7dac07ac36ac1aec9aeb32
       body: ""
