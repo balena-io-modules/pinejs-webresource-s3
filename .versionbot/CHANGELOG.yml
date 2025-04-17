@@ -1,4 +1,16 @@
 - commits:
+    - subject: Update dependency @balena/pinejs to v21
+      hash: 41ac408a31ee3ff42fef55b860f8f5f5d0f47323
+      body: |
+        Update @balena/pinejs from 19.7.4 to 21.0.3
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: balena-renovate[bot]
+  version: 1.0.6
+  title: ""
+  date: 2025-04-17T17:30:51.610Z
+- commits:
     - subject: Update dependency sinon to v20
       hash: 76a8ab27cb36df23220e51385081d356a5540295
       body: |
