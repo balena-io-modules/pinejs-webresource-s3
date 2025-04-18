@@ -19,7 +19,7 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "@balena/lint": "^9.1.3",
-    "@balena/pinejs": "^21.0.0",
+    "@balena/pinejs": "20.1.0-build-add-large-file-uploads-interfaces-1aa101d2ee3103f42cf7f7bc29d703a8958011e8-1",
     "@balena/sbvr-types": "^9.1.0",
     "@types/chai": "^5.0.1",
     "@types/chai-as-promised": "^8.0.1",
@@ -42,7 +42,7 @@
     "memoizee": "^0.4.17"
   },
   "peerDependencies": {
-    "@balena/pinejs": "^16.0.0 || ^17.0.0 || ^18.0.0 || ^19.0.0 || ^20.0.0 || ^21.0.0"
+    "@balena/pinejs": "*"
   },
   "versionist": {
     "publishedAt": "2025-04-17T17:30:51.665Z"
