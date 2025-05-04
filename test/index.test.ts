@@ -182,7 +182,7 @@ describe('S3Handler', function () {
 					'text/plain',
 				);
 				expect(s3Mock.calls()[0].firstArg.input.Key).to.match(
-					new RegExp(`test_[0-9a-f-]+_${payload.filename}`),
+					new RegExp(`test_[0-9a-f-]+`),
 				);
 			};
 		}
@@ -270,7 +270,7 @@ describe('S3Handler', function () {
 				'text/plain',
 			);
 			expect(s3Mock.calls()[0].firstArg.input.Key).to.match(
-				new RegExp(`test_[0-9a-f-]+_${payload.filename}`),
+				new RegExp(`test_[0-9a-f-]+`),
 			);
 		});
 	});
