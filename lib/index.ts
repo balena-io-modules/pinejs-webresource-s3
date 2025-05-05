@@ -107,6 +107,7 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 			Key: key,
 			Body: resource.stream,
 			ContentType: resource.mimetype,
+			ContentDisposition: `inline; filename=${resource.originalname}`,
 		};
 		const upload = new Upload({ client: this.client, params });
 
