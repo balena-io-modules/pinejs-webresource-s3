@@ -101,12 +101,13 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 		resource: webResourceHandler.IncomingFile,
 	): Promise<webResourceHandler.UploadResponse> {
 		let size = 0;
-		const key = this.getFileKey(resource.fieldname, resource.originalname);
+		const key = this.getFileKey(resource.fieldname);
 		const params: PutObjectCommandInput = {
 			Bucket: this.bucket,
 			Key: key,
 			Body: resource.stream,
 			ContentType: resource.mimetype,
+			ContentDisposition: `inline; filename=${resource.originalname}`,
 		};
 		const upload = new Upload({ client: this.client, params });
 
@@ -154,7 +155,7 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 		fieldName: string,
 		payload: BeginMultipartUploadPayload,
 	): Promise<BeginMultipartUploadHandlerResponse> {
-		const fileKey = this.getFileKey(fieldName, payload.filename);
+		const fileKey = this.getFileKey(fieldName);
 
 		const createMultiPartResponse = await this.client.send(
 			new CreateMultipartUploadCommand({
@@ -225,8 +226,8 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 		return hrefWithoutParams.substring(hrefWithoutParams.lastIndexOf('/') + 1);
 	}
 
-	private getFileKey(fieldName: string, fileName: string) {
-		return `${fieldName}_${randomUUID()}_${fileName}`;
+	private getFileKey(fieldName: string) {
+		return `${fieldName}_${randomUUID()}`;
 	}
 
 	private async getUploadParts(
