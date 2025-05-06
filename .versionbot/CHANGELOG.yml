@@ -1,4 +1,33 @@
 - commits:
+    - subject: Forward original name on content-disposition header so it downloads
+        with original name
+      hash: 63142d6dff760bb034bc162d4608c45541f7849a
+      body: ""
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: Otavio Jacobi
+    - subject: Stop relying on customer fillable content to create s3 keys
+      hash: 81ea82143f0f7950d288499e53cb175fb704f52d
+      body: >
+        Using the filename on the s3 key is not a good idea as these can contain
+        lots of weird characters and open ways for security breaches.
+
+        The UUID should be enough to guarantee uniqueness on the keys and the
+        fieldName should be enough to at least point to a direction on what this
+        resource is.
+
+
+        This is also not breaking as the href field of old webresources should
+        still work fine but the new ones shall not use possibly skewed data.
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: Otavio Jacobi
+  version: 1.0.7
+  title: ""
+  date: 2025-05-06T17:33:37.053Z
+- commits:
     - subject: Update dependency @balena/pinejs to v21
       hash: 41ac408a31ee3ff42fef55b860f8f5f5d0f47323
       body: |
