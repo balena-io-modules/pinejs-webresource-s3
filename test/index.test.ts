@@ -9,11 +9,13 @@ import {
 	CreateMultipartUploadCommand,
 	CompleteMultipartUploadCommand,
 	HeadObjectCommand,
+	AbortMultipartUploadCommand,
 } from '@aws-sdk/client-s3';
 import { mockClient } from 'aws-sdk-client-mock';
 import { S3Handler } from '../lib/index.js';
 import { PassThrough } from 'stream';
 import { Upload } from '@aws-sdk/lib-storage';
+import type { webResourceHandler } from '@balena/pinejs';
 
 chai.use(chaiAsPromised);
 const s3Mock = mockClient(S3Client);
@@ -134,41 +136,125 @@ describe('S3Handler', function () {
 		});
 	});
 
-	describe('beginMultipartUpload', function () {
-		function testMultipartUpload(
-			payload: {
-				filename: string;
-				content_type: string;
-				size: number;
-				chunk_size: number;
-			},
-			expectedParts: Array<{ chunkSize: number; partNumber: number }>,
-		) {
-			return async function () {
-				s3Mock
-					.on(CreateMultipartUploadCommand)
-					.resolves({ UploadId: 'test-upload-id' });
-				const result = await s3Handler.beginMultipartUpload('test', payload);
+	describe('multipartUpload', function () {
+		describe('begin', function () {
+			function testMultipartUpload(
+				payload: webResourceHandler.BeginMultipartUploadPayload,
+				expectedParts: Array<{ chunkSize: number; partNumber: number }>,
+			) {
+				return async function () {
+					s3Mock
+						.on(CreateMultipartUploadCommand)
+						.resolves({ UploadId: 'test-upload-id' });
+					const result = await s3Handler.multipartUpload.begin('test', payload);
 
-				expect(result).to.have.property('fileKey');
-				expect(result).to.have.property('uploadId', 'test-upload-id');
-				expect(result.uploadParts)
-					.to.be.an('array')
-					.with.lengthOf(expectedParts.length);
+					expect(result).to.have.property('fileKey');
+					expect(result).to.have.property('uploadId', 'test-upload-id');
+					expect(result.uploadParts)
+						.to.be.an('array')
+						.with.lengthOf(expectedParts.length);
 
-				expectedParts.forEach((part, index: number) => {
-					expect(result.uploadParts[index]).to.have.property(
-						'chunkSize',
-						part.chunkSize,
+					expectedParts.forEach((part, index: number) => {
+						expect(result.uploadParts[index]).to.have.property(
+							'chunkSize',
+							part.chunkSize,
+						);
+						expect(result.uploadParts[index]).to.have.property(
+							'partNumber',
+							part.partNumber,
+						);
+						expect(result.uploadParts[index])
+							.to.have.property('url')
+							.that.matches(/X-Amz-Signature=/);
+					});
+
+					expect(s3Mock.calls()).to.have.lengthOf(1);
+					expect(s3Mock.calls()[0].firstArg).to.be.instanceOf(
+						CreateMultipartUploadCommand,
 					);
-					expect(result.uploadParts[index]).to.have.property(
-						'partNumber',
-						part.partNumber,
+
+					expect(s3Mock.calls()[0].firstArg.input.Bucket).to.be.equal(
+						'test-bucket',
 					);
-					expect(result.uploadParts[index])
-						.to.have.property('url')
-						.that.matches(/X-Amz-Signature=/);
-				});
+					expect(s3Mock.calls()[0].firstArg.input.ContentType).to.be.equal(
+						'text/plain',
+					);
+					expect(s3Mock.calls()[0].firstArg.input.Key).to.match(
+						new RegExp(`test_[0-9a-f-]+`),
+					);
+				};
+			}
+
+			it(
+				'should initiate a multipart upload',
+				testMultipartUpload(
+					{
+						filename: 'file.txt',
+						content_type: 'text/plain',
+						size: 1024,
+						chunk_size: 512,
+					},
+					[
+						{ chunkSize: 512, partNumber: 1 },
+						{ chunkSize: 512, partNumber: 2 },
+					],
+				),
+			);
+
+			it(
+				'should handle a single part upload',
+				testMultipartUpload(
+					{
+						filename: 'file.txt',
+						content_type: 'text/plain',
+						size: 1024,
+						chunk_size: 1024,
+					},
+					[{ chunkSize: 1024, partNumber: 1 }],
+				),
+			);
+
+			it(
+				'should handle a single part upload with chunk size greater than file size',
+				testMultipartUpload(
+					{
+						filename: 'file.txt',
+						content_type: 'text/plain',
+						size: 1024,
+						chunk_size: 2048,
+					},
+					[{ chunkSize: 1024, partNumber: 1 }],
+				),
+			);
+
+			it(
+				'should handle a not divisible chunk size',
+				testMultipartUpload(
+					{
+						filename: 'file.txt',
+						content_type: 'text/plain',
+						size: 1024,
+						chunk_size: 513,
+					},
+					[
+						{ chunkSize: 513, partNumber: 1 },
+						{ chunkSize: 511, partNumber: 2 },
+					],
+				),
+			);
+
+			it('should throw an error when the multipart upload fails', async function () {
+				s3Mock.on(CreateMultipartUploadCommand).resolves({});
+
+				const payload = {
+					filename: 'file.txt',
+					content_type: 'text/plain',
+					size: 1024,
+					chunk_size: 512,
+				};
+				await expect(
+					s3Handler.multipartUpload.begin('test', payload),
+				).to.be.rejectedWith('Failed to create multipart upload.');
 
 				expect(s3Mock.calls()).to.have.lengthOf(1);
 				expect(s3Mock.calls()[0].firstArg).to.be.instanceOf(
@@ -184,126 +270,168 @@ describe('S3Handler', function () {
 				expect(s3Mock.calls()[0].firstArg.input.Key).to.match(
 					new RegExp(`test_[0-9a-f-]+`),
 				);
-			};
-		}
+			});
 
-		it(
-			'should initiate a multipart upload',
-			testMultipartUpload(
-				{
+			it(
+				'should initiate a multipart upload',
+				testMultipartUpload(
+					{
+						filename: 'file.txt',
+						content_type: 'text/plain',
+						size: 1024,
+						chunk_size: 512,
+					},
+					[
+						{ chunkSize: 512, partNumber: 1 },
+						{ chunkSize: 512, partNumber: 2 },
+					],
+				),
+			);
+
+			it(
+				'should handle a single part upload',
+				testMultipartUpload(
+					{
+						filename: 'file.txt',
+						content_type: 'text/plain',
+						size: 1024,
+						chunk_size: 1024,
+					},
+					[{ chunkSize: 1024, partNumber: 1 }],
+				),
+			);
+
+			it(
+				'should handle a single part upload with chunk size greater than file size',
+				testMultipartUpload(
+					{
+						filename: 'file.txt',
+						content_type: 'text/plain',
+						size: 1024,
+						chunk_size: 2048,
+					},
+					[{ chunkSize: 1024, partNumber: 1 }],
+				),
+			);
+
+			it(
+				'should handle a not divisible chunk size',
+				testMultipartUpload(
+					{
+						filename: 'file.txt',
+						content_type: 'text/plain',
+						size: 1024,
+						chunk_size: 513,
+					},
+					[
+						{ chunkSize: 513, partNumber: 1 },
+						{ chunkSize: 511, partNumber: 2 },
+					],
+				),
+			);
+
+			it('should throw an error when the multipart upload fails', async function () {
+				s3Mock.on(CreateMultipartUploadCommand).resolves({});
+
+				const payload = {
 					filename: 'file.txt',
 					content_type: 'text/plain',
 					size: 1024,
 					chunk_size: 512,
-				},
-				[
-					{ chunkSize: 512, partNumber: 1 },
-					{ chunkSize: 512, partNumber: 2 },
-				],
-			),
-		);
+				};
+				await expect(
+					s3Handler.multipartUpload.begin('test', payload),
+				).to.be.rejectedWith('Failed to create multipart upload.');
 
-		it(
-			'should handle a single part upload',
-			testMultipartUpload(
-				{
-					filename: 'file.txt',
-					content_type: 'text/plain',
-					size: 1024,
-					chunk_size: 1024,
-				},
-				[{ chunkSize: 1024, partNumber: 1 }],
-			),
-		);
+				expect(s3Mock.calls()).to.have.lengthOf(1);
+				expect(s3Mock.calls()[0].firstArg).to.be.instanceOf(
+					CreateMultipartUploadCommand,
+				);
 
-		it(
-			'should handle a single part upload with chunk size greater than file size',
-			testMultipartUpload(
-				{
-					filename: 'file.txt',
-					content_type: 'text/plain',
-					size: 1024,
-					chunk_size: 2048,
-				},
-				[{ chunkSize: 1024, partNumber: 1 }],
-			),
-		);
+				expect(s3Mock.calls()[0].firstArg.input.Bucket).to.be.equal(
+					'test-bucket',
+				);
+				expect(s3Mock.calls()[0].firstArg.input.ContentType).to.be.equal(
+					'text/plain',
+				);
+				expect(s3Mock.calls()[0].firstArg.input.Key).to.match(
+					new RegExp(`test_[0-9a-f-]+`),
+				);
+			});
 
-		it(
-			'should handle a not divisible chunk size',
-			testMultipartUpload(
-				{
-					filename: 'file.txt',
-					content_type: 'text/plain',
-					size: 1024,
-					chunk_size: 513,
-				},
-				[
-					{ chunkSize: 513, partNumber: 1 },
-					{ chunkSize: 511, partNumber: 2 },
-				],
-			),
-		);
+			describe('commit', function () {
+				it('should complete a multipart upload', async function () {
+					s3Mock.on(CompleteMultipartUploadCommand).resolves({});
+					s3Mock
+						.on(HeadObjectCommand)
+						.resolves({ ContentLength: 1024, ContentType: 'text/plain' });
 
-		it('should throw an error when the multipart upload fails', async function () {
-			s3Mock.on(CreateMultipartUploadCommand).resolves({});
+					const payload = {
+						fileKey: 'test-key',
+						uploadId: 'test-upload-id',
+						filename: 'file.txt',
+						providerCommitData: {},
+					};
+					const result = await s3Handler.multipartUpload.commit(payload);
 
-			const payload = {
-				filename: 'file.txt',
-				content_type: 'text/plain',
-				size: 1024,
-				chunk_size: 512,
-			};
-			await expect(
-				s3Handler.beginMultipartUpload('test', payload),
-			).to.be.rejectedWith('Failed to create multipart upload.');
+					expect(result).to.have.property('href');
+					expect(result).to.have.property('size', 1024);
+					expect(result).to.have.property('content_type', 'text/plain');
 
-			expect(s3Mock.calls()).to.have.lengthOf(1);
-			expect(s3Mock.calls()[0].firstArg).to.be.instanceOf(
-				CreateMultipartUploadCommand,
-			);
+					expect(s3Mock.calls()).to.have.lengthOf(2);
+					expect(s3Mock.calls()[0].firstArg).to.be.instanceOf(
+						CompleteMultipartUploadCommand,
+					);
 
-			expect(s3Mock.calls()[0].firstArg.input.Bucket).to.be.equal(
-				'test-bucket',
-			);
-			expect(s3Mock.calls()[0].firstArg.input.ContentType).to.be.equal(
-				'text/plain',
-			);
-			expect(s3Mock.calls()[0].firstArg.input.Key).to.match(
-				new RegExp(`test_[0-9a-f-]+`),
-			);
-		});
-	});
+					expect(s3Mock.calls()[0].firstArg.input).to.deep.equal({
+						Bucket: 'test-bucket',
+						Key: 'test-key',
+						UploadId: 'test-upload-id',
+						MultipartUpload: {},
+					});
+				});
+			});
 
-	describe('commitMultipartUpload', function () {
-		it('should complete a multipart upload', async function () {
-			s3Mock.on(CompleteMultipartUploadCommand).resolves({});
-			s3Mock
-				.on(HeadObjectCommand)
-				.resolves({ ContentLength: 1024, ContentType: 'text/plain' });
+			describe('cancel', function () {
+				it('should abort a multipart upload', async function () {
+					s3Mock.on(AbortMultipartUploadCommand).resolves({});
 
-			const payload = {
-				fileKey: 'test-key',
-				uploadId: 'test-upload-id',
-				filename: 'file.txt',
-				providerCommitData: {},
-			};
-			const result = await s3Handler.commitMultipartUpload(payload);
+					const payload = {
+						fileKey: 'test-key',
+						uploadId: 'test-upload-id',
+					};
 
-			expect(result).to.have.property('href');
-			expect(result).to.have.property('size', 1024);
-			expect(result).to.have.property('content_type', 'text/plain');
+					await s3Handler.multipartUpload.cancel(payload);
 
-			expect(s3Mock.calls()).to.have.lengthOf(2);
-			expect(s3Mock.calls()[0].firstArg).to.be.instanceOf(
-				CompleteMultipartUploadCommand,
-			);
+					expect(s3Mock.calls()).to.have.lengthOf(1);
+					expect(s3Mock.calls()[0].firstArg).to.be.instanceOf(
+						AbortMultipartUploadCommand,
+					);
 
-			expect(s3Mock.calls()[0].firstArg.input).to.deep.equal({
-				Bucket: 'test-bucket',
-				Key: 'test-key',
-				UploadId: 'test-upload-id',
-				MultipartUpload: {},
+					expect(s3Mock.calls()[0].firstArg.input).to.deep.equal({
+						Bucket: 'test-bucket',
+						Key: 'test-key',
+						UploadId: 'test-upload-id',
+					});
+				});
+
+				it('should throw an error when aborting fails', async function () {
+					s3Mock.on(AbortMultipartUploadCommand).rejects(new Error('S3 error'));
+
+					const payload = {
+						fileKey: 'test-key',
+						uploadId: 'test-upload-id',
+					};
+
+					await expect(
+						s3Handler.multipartUpload.cancel(payload),
+					).to.be.rejectedWith('S3 error');
+
+					expect(s3Mock.calls()).to.have.lengthOf(1);
+					expect(s3Mock.calls()[0].firstArg).to.be.instanceOf(
+						AbortMultipartUploadCommand,
+					);
+				});
 			});
 		});
 	});

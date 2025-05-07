@@ -8,6 +8,7 @@ import {
 	UploadPartCommand,
 	CompleteMultipartUploadCommand,
 	HeadObjectCommand,
+	AbortMultipartUploadCommand,
 } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
@@ -16,34 +17,6 @@ import { webResourceHandler } from '@balena/pinejs';
 import type { WebResourceType as WebResource } from '@balena/sbvr-types';
 import memoize from 'memoizee';
 import { randomUUID } from 'node:crypto';
-
-// TODO: remove me and import from pinejs once v17 is out
-interface BeginMultipartUploadPayload {
-	filename: string;
-	content_type: string;
-	size: number;
-	chunk_size: number;
-}
-
-interface UploadPart {
-	url: string;
-	chunkSize: number;
-	partNumber: number;
-}
-
-interface BeginMultipartUploadHandlerResponse {
-	uploadParts: UploadPart[];
-	fileKey: string;
-	uploadId: string;
-}
-
-interface CommitMultipartUploadPayload {
-	fileKey: string;
-	uploadId: string;
-	filename: string;
-	providerCommitData?: Record<string, any>;
-}
-
 export interface S3HandlerProps {
 	region: string;
 	accessKey: string;
@@ -53,6 +26,8 @@ export interface S3HandlerProps {
 	maxSize?: number;
 	signedUrlExpireTimeSeconds?: number;
 	signedUrlCacheExpireTimeSeconds?: number;
+	minimumMultipartUploadSize?: number;
+	defaultMultipartUploadSize?: number;
 }
 
 const normalizeHref = (href: string) => {
@@ -63,6 +38,8 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 	private readonly config: S3ClientConfig;
 	private readonly bucket: string;
 	private readonly maxFileSize: number;
+	private readonly defaultMultipartUploadSize: number;
+	private readonly minimumMultipartUploadSize: number;
 
 	protected readonly signedUrlExpireTimeSeconds: number;
 	protected readonly signedUrlCacheExpireTimeSeconds: number;
@@ -86,6 +63,10 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 		this.signedUrlCacheExpireTimeSeconds =
 			config.signedUrlCacheExpireTimeSeconds ?? 82800; // 22h
 
+		this.minimumMultipartUploadSize =
+			config.minimumMultipartUploadSize ?? 5 * 1024 * 1024; // 5 MB
+		this.defaultMultipartUploadSize =
+			config.defaultMultipartUploadSize ?? 10 * 1024 * 1024; // 5 MB
 		this.maxFileSize = config.maxSize ?? 52428800;
 		this.bucket = config.bucket;
 		this.client = new S3Client(this.config);
@@ -151,61 +132,88 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 		return webResource;
 	}
 
-	public async beginMultipartUpload(
-		fieldName: string,
-		payload: BeginMultipartUploadPayload,
-	): Promise<BeginMultipartUploadHandlerResponse> {
-		const fileKey = this.getFileKey(fieldName);
+	public multipartUpload = {
+		begin: async (
+			fieldName: string,
+			payload: webResourceHandler.BeginMultipartUploadPayload,
+		): Promise<webResourceHandler.BeginMultipartUploadHandlerResponse> => {
+			const fileKey = this.getFileKey(fieldName);
 
-		const createMultiPartResponse = await this.client.send(
-			new CreateMultipartUploadCommand({
-				Bucket: this.bucket,
-				Key: fileKey,
-				ContentType: payload.content_type,
-			}),
-		);
+			const createMultiPartResponse = await this.client.send(
+				new CreateMultipartUploadCommand({
+					Bucket: this.bucket,
+					Key: fileKey,
+					ContentType: payload.content_type,
+					ContentDisposition: `inline; ${payload.filename}`,
+				}),
+			);
 
-		if (createMultiPartResponse.UploadId == null) {
-			throw new Error('Failed to create multipart upload.');
-		}
+			if (createMultiPartResponse.UploadId == null) {
+				throw new Error('Failed to create multipart upload.');
+			}
 
-		const uploadParts = await this.getUploadParts(
+			const uploadParts = await this.getUploadParts(
+				fileKey,
+				createMultiPartResponse.UploadId,
+				payload,
+			);
+			return {
+				fileKey,
+				uploadId: createMultiPartResponse.UploadId,
+				uploadParts,
+			};
+		},
+
+		commit: async ({
 			fileKey,
-			createMultiPartResponse.UploadId,
-			payload,
-		);
-		return { fileKey, uploadId: createMultiPartResponse.UploadId, uploadParts };
-	}
+			uploadId,
+			filename,
+			providerCommitData,
+		}: webResourceHandler.CommitMultipartUploadPayload): Promise<WebResource> => {
+			await this.client.send(
+				new CompleteMultipartUploadCommand({
+					Bucket: this.bucket,
+					Key: fileKey,
+					UploadId: uploadId,
+					MultipartUpload: providerCommitData,
+				}),
+			);
 
-	public async commitMultipartUpload({
-		fileKey,
-		uploadId,
-		filename,
-		providerCommitData,
-	}: CommitMultipartUploadPayload): Promise<WebResource> {
-		await this.client.send(
-			new CompleteMultipartUploadCommand({
-				Bucket: this.bucket,
-				Key: fileKey,
-				UploadId: uploadId,
-				MultipartUpload: providerCommitData,
-			}),
-		);
+			const headResult = await this.client.send(
+				new HeadObjectCommand({
+					Bucket: this.bucket,
+					Key: fileKey,
+				}),
+			);
 
-		const headResult = await this.client.send(
-			new HeadObjectCommand({
-				Bucket: this.bucket,
-				Key: fileKey,
-			}),
-		);
+			return {
+				href: this.getS3URL(fileKey),
+				filename: filename,
+				size: headResult.ContentLength,
+				content_type: headResult.ContentType,
+			};
+		},
 
-		return {
-			href: this.getS3URL(fileKey),
-			filename: filename,
-			size: headResult.ContentLength,
-			content_type: headResult.ContentType,
-		};
-	}
+		cancel: async ({
+			fileKey,
+			uploadId,
+		}: webResourceHandler.CancelMultipartUploadPayload): Promise<void> => {
+			await this.client.send(
+				new AbortMultipartUploadCommand({
+					Bucket: this.bucket,
+					Key: fileKey,
+					UploadId: uploadId,
+				}),
+			);
+		},
+		getMinimumPartSize: () => {
+			return this.minimumMultipartUploadSize;
+		},
+
+		getDefaultPartSize: () => {
+			return this.defaultMultipartUploadSize;
+		},
+	};
 
 	private s3SignUrl(fileKey: string): Promise<string> {
 		const command = new GetObjectCommand({
@@ -233,8 +241,8 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 	private async getUploadParts(
 		fileKey: string,
 		uploadId: string,
-		payload: BeginMultipartUploadPayload,
-	): Promise<UploadPart[]> {
+		payload: webResourceHandler.BeginMultipartUploadPayload,
+	): Promise<webResourceHandler.UploadPart[]> {
 		const chunkSizesWithParts = this.getChunkSizesWithParts(
 			payload.size,
 			payload.chunk_size,
@@ -275,7 +283,7 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 	private getChunkSizesWithParts(
 		size: number,
 		chunkSize: number,
-	): Array<Pick<UploadPart, 'chunkSize' | 'partNumber'>> {
+	): Array<Pick<webResourceHandler.UploadPart, 'chunkSize' | 'partNumber'>> {
 		const chunkSizesWithParts = [];
 		let partNumber = 1;
 		let remainingSize = size;
