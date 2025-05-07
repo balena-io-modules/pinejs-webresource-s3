@@ -1,4 +1,17 @@
 - commits:
+    - subject: use WebResourceHandler interface for multipart uploads
+      hash: 811affebd0d3806d9df34a17ab25990e04000b9a
+      body: ""
+      footer:
+        See: https://balena.fibery.io/search/vyloj#Work/Improvement/Add-multipart-upload-interface-for-webresource-handlers-and-add-them-to-S3-Cloudfront-handlers-2584
+        see: https://balena.fibery.io/search/vyloj#Work/Improvement/Add-multipart-upload-interface-for-webresource-handlers-and-add-them-to-S3-Cloudfront-handlers-2584
+        Change-type: major
+        change-type: major
+      author: Otavio Jacobi
+  version: 2.0.0
+  title: ""
+  date: 2025-05-07T12:32:47.445Z
+- commits:
     - subject: Forward original name on content-disposition header so it downloads
         with original name
       hash: 63142d6dff760bb034bc162d4608c45541f7849a
