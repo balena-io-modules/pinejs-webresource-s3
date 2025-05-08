@@ -1,4 +1,18 @@
 - commits:
+    - subject: Allow overriding storage class for uploads and default to
+        INTELLIGENT_TIERING
+      hash: d47f52a3d1d85a637d79bbf8d9cd61e59ffb7eba
+      body: ""
+      footer:
+        See: https://balena.fibery.io/search/V69fl#Work/Improvement/Allow-configurable-storage-classes-for-Uploads-2816
+        see: https://balena.fibery.io/search/V69fl#Work/Improvement/Allow-configurable-storage-classes-for-Uploads-2816
+        Change-type: minor
+        change-type: minor
+      author: Otavio Jacobi
+  version: 2.1.0
+  title: ""
+  date: 2025-05-08T15:52:27.576Z
+- commits:
     - subject: use WebResourceHandler interface for multipart uploads
       hash: 811affebd0d3806d9df34a17ab25990e04000b9a
       body: ""
