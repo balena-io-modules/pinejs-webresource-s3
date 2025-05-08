@@ -9,6 +9,7 @@ import {
 	CompleteMultipartUploadCommand,
 	HeadObjectCommand,
 	AbortMultipartUploadCommand,
+	type StorageClass,
 } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
@@ -28,6 +29,7 @@ export interface S3HandlerProps {
 	signedUrlCacheExpireTimeSeconds?: number;
 	minimumMultipartUploadSize?: number;
 	defaultMultipartUploadSize?: number;
+	storageClass?: StorageClass;
 }
 
 const normalizeHref = (href: string) => {
@@ -44,6 +46,7 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 	protected readonly signedUrlExpireTimeSeconds: number;
 	protected readonly signedUrlCacheExpireTimeSeconds: number;
 	protected cachedGetSignedUrl: (fileKey: string) => Promise<string>;
+	protected readonly storageClass: StorageClass;
 
 	private client: S3Client;
 
@@ -76,6 +79,7 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 		this.cachedGetSignedUrl = memoize(this.s3SignUrl, {
 			maxAge: this.signedUrlCacheExpireTimeSeconds * 1000,
 		});
+		this.storageClass = config.storageClass ?? 'INTELLIGENT_TIERING';
 	}
 
 	public async handleFile(
@@ -89,6 +93,7 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 			Body: resource.stream,
 			ContentType: resource.mimetype,
 			ContentDisposition: `inline; filename=${resource.originalname}`,
+			StorageClass: this.storageClass,
 		};
 		const upload = new Upload({ client: this.client, params });
 
@@ -145,6 +150,7 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 					Key: fileKey,
 					ContentType: payload.content_type,
 					ContentDisposition: `inline; ${payload.filename}`,
+					StorageClass: this.storageClass,
 				}),
 			);
 
