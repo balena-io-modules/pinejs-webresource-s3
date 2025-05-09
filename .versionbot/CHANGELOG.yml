@@ -1,4 +1,17 @@
 - commits:
+    - subject: Do not default to any storage class
+      hash: f094cc950ac07320e82e0cc14c9d52b3b90b5f89
+      body: ""
+      footer:
+        See: https://balena.fibery.io/search/UbU30#Work/Improvement/Allow-configurable-storage-classes-for-uploads-2816
+        see: https://balena.fibery.io/search/UbU30#Work/Improvement/Allow-configurable-storage-classes-for-uploads-2816
+        Change-type: patch
+        change-type: patch
+      author: Otavio Jacobi
+  version: 2.1.1
+  title: ""
+  date: 2025-05-09T12:39:30.825Z
+- commits:
     - subject: Allow overriding storage class for uploads and default to
         INTELLIGENT_TIERING
       hash: d47f52a3d1d85a637d79bbf8d9cd61e59ffb7eba
