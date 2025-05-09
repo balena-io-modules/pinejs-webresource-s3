@@ -46,7 +46,7 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 	protected readonly signedUrlExpireTimeSeconds: number;
 	protected readonly signedUrlCacheExpireTimeSeconds: number;
 	protected cachedGetSignedUrl: (fileKey: string) => Promise<string>;
-	protected readonly storageClass: StorageClass;
+	protected readonly storageClass: StorageClass | undefined;
 
 	private client: S3Client;
 
@@ -79,7 +79,7 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 		this.cachedGetSignedUrl = memoize(this.s3SignUrl, {
 			maxAge: this.signedUrlCacheExpireTimeSeconds * 1000,
 		});
-		this.storageClass = config.storageClass ?? 'INTELLIGENT_TIERING';
+		this.storageClass = config.storageClass;
 	}
 
 	public async handleFile(
