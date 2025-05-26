@@ -92,7 +92,7 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 			Key: key,
 			Body: resource.stream,
 			ContentType: resource.mimetype,
-			ContentDisposition: `inline; filename=${resource.originalname}`,
+			ContentDisposition: `inline; filename="${resource.originalname}"`,
 			StorageClass: this.storageClass,
 		};
 		const upload = new Upload({ client: this.client, params });
@@ -149,7 +149,7 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 					Bucket: this.bucket,
 					Key: fileKey,
 					ContentType: payload.content_type,
-					ContentDisposition: `inline; ${payload.filename}`,
+					ContentDisposition: `inline; filename="${payload.filename}"`,
 					StorageClass: this.storageClass,
 				}),
 			);
