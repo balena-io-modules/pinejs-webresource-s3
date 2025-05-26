@@ -1,4 +1,15 @@
 - commits:
+    - subject: Add escaped filename to content-disposition headers
+      hash: 2ce50fe7471eb6fd7eed2db74a442126cedf5e11
+      body: ""
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: Otavio Jacobi
+  version: 2.1.2
+  title: ""
+  date: 2025-05-26T01:49:22.525Z
+- commits:
     - subject: Do not default to any storage class
       hash: f094cc950ac07320e82e0cc14c9d52b3b90b5f89
       body: ""
