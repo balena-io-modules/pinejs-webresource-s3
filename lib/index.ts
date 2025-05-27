@@ -10,6 +10,7 @@ import {
 	HeadObjectCommand,
 	AbortMultipartUploadCommand,
 	type StorageClass,
+	type CompleteMultipartUploadCommandInput,
 } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
@@ -35,6 +36,9 @@ export interface S3HandlerProps {
 const normalizeHref = (href: string) => {
 	return href.split('?')[0];
 };
+
+type ChecksumParamName =
+	`Checksum${webResourceHandler.SupportedChecksumAlgorithm}`;
 
 export class S3Handler implements webResourceHandler.WebResourceHandler {
 	private readonly config: S3ClientConfig;
@@ -95,6 +99,11 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 			ContentDisposition: `inline; filename="${resource.originalname}"`,
 			StorageClass: this.storageClass,
 		};
+
+		if (resource.checksumAlgorithm != null) {
+			const headerValue = this.getS3ChecksumHeader(resource.checksumAlgorithm);
+			params[headerValue] = resource.checksum;
+		}
 		const upload = new Upload({ client: this.client, params });
 
 		upload.on('httpUploadProgress', async (ev) => {
@@ -175,15 +184,22 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 			uploadId,
 			filename,
 			providerCommitData,
+			checksumAlgorithm,
+			checksum,
 		}: webResourceHandler.CommitMultipartUploadPayload): Promise<WebResource> => {
-			await this.client.send(
-				new CompleteMultipartUploadCommand({
-					Bucket: this.bucket,
-					Key: fileKey,
-					UploadId: uploadId,
-					MultipartUpload: providerCommitData,
-				}),
-			);
+			const params: CompleteMultipartUploadCommandInput = {
+				Bucket: this.bucket,
+				Key: fileKey,
+				UploadId: uploadId,
+				MultipartUpload: providerCommitData,
+			};
+
+			if (checksumAlgorithm != null) {
+				const headerValue = this.getS3ChecksumHeader(checksumAlgorithm);
+				params[headerValue] = checksum;
+			}
+
+			await this.client.send(new CompleteMultipartUploadCommand(params));
 
 			const headResult = await this.client.send(
 				new HeadObjectCommand({
@@ -242,6 +258,12 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 
 	private getFileKey(fieldName: string) {
 		return `${fieldName}_${randomUUID()}`;
+	}
+
+	private getS3ChecksumHeader(
+		algorithm: webResourceHandler.SupportedChecksumAlgorithm,
+	): ChecksumParamName {
+		return `Checksum${algorithm}`;
 	}
 
 	private async getUploadParts(
