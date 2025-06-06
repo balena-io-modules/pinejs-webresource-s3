@@ -1,6 +1,6 @@
 {
   "name": "@balena/pinejs-webresource-s3",
-  "version": "2.1.2",
+  "version": "2.1.3",
   "description": "A PineJS WebResource handler for storing & serving files on S3",
   "type": "module",
   "main": "build/index.js",
@@ -45,6 +45,6 @@
     "@balena/pinejs": "^21.3.0"
   },
   "versionist": {
-    "publishedAt": "2025-05-26T01:49:22.588Z"
+    "publishedAt": "2025-06-06T06:52:01.397Z"
   }
 }
