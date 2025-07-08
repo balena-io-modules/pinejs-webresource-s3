@@ -1,4 +1,15 @@
 - commits:
+    - subject: Allow using with @balena/pinejs v22
+      hash: 8ccf430730f648fd1958c7344d0024057414363d
+      body: ""
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: joshbwlng
+  version: 2.1.6
+  title: ""
+  date: 2025-07-08T21:42:17.110Z
+- commits:
     - subject: Update dependency @balena/sbvr-types to v10
       hash: 7ccec5336ee47212128b537b0f37aa3210ab1ca3
       body: |
