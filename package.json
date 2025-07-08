@@ -20,7 +20,7 @@
   "devDependencies": {
     "@balena/lint": "^9.1.3",
     "@balena/pinejs": "^21.3.0",
-    "@balena/sbvr-types": "^9.1.0",
+    "@balena/sbvr-types": "^10.0.0",
     "@types/chai": "^5.0.1",
     "@types/chai-as-promised": "^8.0.1",
     "@types/mocha": "^10.0.10",
