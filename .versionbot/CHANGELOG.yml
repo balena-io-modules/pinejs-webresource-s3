@@ -1,4 +1,16 @@
 - commits:
+    - subject: Update dependency @balena/sbvr-types to v10
+      hash: 7ccec5336ee47212128b537b0f37aa3210ab1ca3
+      body: |
+        Update @balena/sbvr-types from 9.2.6 to 10.0.0
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: balena-renovate[bot]
+  version: 2.1.5
+  title: ""
+  date: 2025-07-08T00:50:14.334Z
+- commits:
     - subject: Update dependency sinon to v21
       hash: 19d4fc388adea425d52d58364d4e4a21f9cc8e68
       body: |
