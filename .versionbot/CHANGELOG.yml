@@ -1,4 +1,15 @@
 - commits:
+    - subject: Mark pinejs 23.x as compatible
+      hash: 4e68929a66f4c6c20ab9ecc65211e1e16622ca7e
+      body: ""
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: Pagan Gazzard
+  version: 2.1.7
+  title: ""
+  date: 2025-08-06T13:55:34.997Z
+- commits:
     - subject: Allow using with @balena/pinejs v22
       hash: 8ccf430730f648fd1958c7344d0024057414363d
       body: ""
