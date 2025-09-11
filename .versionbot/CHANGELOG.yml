@@ -1,4 +1,16 @@
 - commits:
+    - subject: Update dependency @balena/sbvr-types to v11
+      hash: d8f7f772b14f22f59602e79a8c188d8d937f715b
+      body: |
+        Update @balena/sbvr-types from 10.1.0 to 11.1.1
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: balena-renovate[bot]
+  version: 2.1.8
+  title: ""
+  date: 2025-09-11T11:49:06.642Z
+- commits:
     - subject: Mark pinejs 23.x as compatible
       hash: 4e68929a66f4c6c20ab9ecc65211e1e16622ca7e
       body: ""
