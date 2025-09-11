@@ -1,4 +1,16 @@
 - commits:
+    - subject: Update dependency chai to v6
+      hash: fc77f2d39d8fcdb11dbed1ad0a21b56097ddae4d
+      body: |
+        Update chai from 5.3.3 to 6.0.1
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: balena-renovate[bot]
+  version: 2.1.9
+  title: ""
+  date: 2025-09-11T13:41:34.496Z
+- commits:
     - subject: Update dependency @balena/sbvr-types to v11
       hash: d8f7f772b14f22f59602e79a8c188d8d937f715b
       body: |
