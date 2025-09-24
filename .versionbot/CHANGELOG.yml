@@ -1,4 +1,16 @@
 - commits:
+    - subject: Update dependency @balena/pinejs to v23
+      hash: 294a33984ba8bdfdc73757c0a1276e512c4b0eec
+      body: |
+        Update @balena/pinejs from 21.6.16 to 23.1.5
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: balena-renovate[bot]
+  version: 2.1.10
+  title: ""
+  date: 2025-09-24T13:23:47.455Z
+- commits:
     - subject: Update dependency chai to v6
       hash: fc77f2d39d8fcdb11dbed1ad0a21b56097ddae4d
       body: |
