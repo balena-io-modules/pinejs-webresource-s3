@@ -12,6 +12,10 @@
     "prepare": "node -e \"try { (await import('husky')).default() } catch (e) { if (e.code !== 'ERR_MODULE_NOT_FOUND') throw e }\" --input-type module"
   },
   "author": "Balena Inc. <hello@balena.io>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/balena-io-modules/pinejs-webresource-s3.git"
+  },
   "engines": {
     "node": ">=20.14.0",
     "npm": ">=10.7.0"
