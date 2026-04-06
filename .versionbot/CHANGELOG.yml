@@ -1,4 +1,17 @@
 - commits:
+    - subject: Mark pinejs 24.x as compatible
+      hash: bc4e4ab2bf103582f84ce366ac196f7fd30e36c8
+      body: ""
+      footer:
+        Change-type: patch
+        change-type: patch
+        See: https://github.com/balena-io/pinejs/pull/995
+        see: https://github.com/balena-io/pinejs/pull/995
+      author: Thodoris Greasidis
+  version: 2.1.27
+  title: ""
+  date: 2026-04-06T17:23:34.711Z
+- commits:
     - subject: Revert flowzone pinning to master
       hash: cc413b210f466e91e89d50c92122aaa196637597
       body: ""
