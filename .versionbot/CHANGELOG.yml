@@ -1,4 +1,16 @@
 - commits:
+    - subject: Update dependency @balena/pinejs to v24
+      hash: 83032bc827b3dcf7dd72988025a7d03c3cbc08f6
+      body: |
+        Update @balena/pinejs from 23.4.1 to 24.0.0
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: balena-renovate[bot]
+  version: 2.1.28
+  title: ""
+  date: 2026-06-09T09:23:53.907Z
+- commits:
     - subject: Mark pinejs 24.x as compatible
       hash: bc4e4ab2bf103582f84ce366ac196f7fd30e36c8
       body: ""
