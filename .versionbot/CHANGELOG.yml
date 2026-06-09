@@ -1,4 +1,16 @@
 - commits:
+    - subject: Rename .linstagedrc to .lintstagedrc.json
+      hash: c906ce4b3e010f6db899d4673e87958669ba8708
+      body: |
+        In preparation for lint-staged v17 which recommends this rename
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: joshbwlng
+  version: 2.1.29
+  title: ""
+  date: 2026-06-09T09:39:18.306Z
+- commits:
     - subject: Update dependency @balena/pinejs to v24
       hash: 83032bc827b3dcf7dd72988025a7d03c3cbc08f6
       body: |
