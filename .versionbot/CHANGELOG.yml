@@ -1,4 +1,16 @@
 - commits:
+    - subject: Pin dependencies
+      hash: 565adf5fd607172ff717295093da77983ab93b37
+      body: |
+        Update @types/chai
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: balena-renovate[bot]
+  version: 2.1.32
+  title: ""
+  date: 2026-06-10T14:14:27.605Z
+- commits:
     - subject: Update dependency sinon to v22
       hash: 61d66926300217e79aaf051908b1ab05623fbaeb
       body: |
