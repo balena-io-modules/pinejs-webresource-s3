@@ -9,7 +9,9 @@
 		"strict": true,
 		"target": "ES2022",
 		"declaration": true,
-		"skipLibCheck": true
+		"skipLibCheck": true,
+		"rootDir": ".",
+		"types": ["mocha", "node"]
 	},
 	"include": [
 		"lib/**/*.ts",
