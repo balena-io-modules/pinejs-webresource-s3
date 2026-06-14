@@ -1,4 +1,16 @@
 - commits:
+    - subject: Update dependency @types/sinon to v21
+      hash: 25c2d08235ebeb9788be7abad821fcacd9961abd
+      body: |
+        Update @types/sinon from 17.0.4 to 21.0.1
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: balena-renovate[bot]
+  version: 2.1.33
+  title: ""
+  date: 2026-06-14T00:00:42.268Z
+- commits:
     - subject: Pin dependencies
       hash: 565adf5fd607172ff717295093da77983ab93b37
       body: |
