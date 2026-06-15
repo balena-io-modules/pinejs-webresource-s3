@@ -1,4 +1,22 @@
 - commits:
+    - subject: Add @types/node to devDependencies
+      hash: 74221f446ec6965aaa58425254279a01d6b90284
+      body: ""
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: joshbwlng
+    - subject: Update typescript to v6
+      hash: e54b915230fb3a3a9605500cd1628f933095eb36
+      body: ""
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: joshbwlng
+  version: 2.1.34
+  title: ""
+  date: 2026-06-15T09:20:07.816Z
+- commits:
     - subject: Update dependency @types/sinon to v21
       hash: 25c2d08235ebeb9788be7abad821fcacd9961abd
       body: |
