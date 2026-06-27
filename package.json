@@ -34,7 +34,7 @@
     "chai": "6.2.2",
     "chai-as-promised": "8.0.2",
     "husky": "9.1.7",
-    "lint-staged": "17.0.7",
+    "lint-staged": "17.0.8",
     "mocha": "11.7.6",
     "sinon": "22.0.0",
     "tsx": "4.22.4",
