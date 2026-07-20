@@ -1,4 +1,16 @@
 - commits:
+    - subject: Update dependency tsx to v4.22.5
+      hash: 481532613602ed123c87a8eb9fd482adbc42cab8
+      body: |
+        Update tsx from 4.22.4 to 4.22.5
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: balena-renovate[bot]
+  version: 2.1.36
+  title: ""
+  date: 2026-07-20T06:06:10.084Z
+- commits:
     - subject: Update dependency lint-staged to v17.0.8
       hash: c021ec7bcdfe816285abfa1eb5dd9f688dcccbfe
       body: |
