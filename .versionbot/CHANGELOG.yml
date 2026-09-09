@@ -1,4 +1,16 @@
 - commits:
+    - subject: Update dependency flowzonify to v0.4.4
+      hash: 2a9506a6965dcbef4ca51539ed879d78e8d80389
+      body: |
+        Update flowzonify from 0.0.0 to 0.4.4
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: balena-renovate[bot]
+  version: 2.1.38
+  title: ""
+  date: 2026-09-09T19:04:16.811Z
+- commits:
     - subject: Update dependency tsx to v4.23.1
       hash: 1129b54901a99d05a6846286543d573f2a8fdc49
       body: |
