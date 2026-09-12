@@ -1,4 +1,16 @@
 - commits:
+    - subject: Update dependency lint-staged to v17.5.0
+      hash: 99aef137a616949a0b50e38d32fa72485d8f8a07
+      body: |
+        Update lint-staged from 17.0.8 to 17.5.0
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: balena-renovate[bot]
+  version: 2.1.40
+  title: ""
+  date: 2026-09-12T01:25:34.501Z
+- commits:
     - subject: Update dependency tsx to v4.23.13
       hash: 67ab2886dc602ee75321b3b7a5bd3d6a108ad1b3
       body: |
