@@ -1,4 +1,16 @@
 - commits:
+    - subject: Update dependency sinon to v22.1.0
+      hash: b60d7e493275741d11b162e3e33391554dd35bf4
+      body: |
+        Update sinon from 22.0.0 to 22.1.0
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: balena-renovate[bot]
+  version: 2.1.43
+  title: ""
+  date: 2026-09-17T00:09:33.781Z
+- commits:
     - subject: Update dependency mocha to v12
       hash: 40c08040e3631857ff6ec32268c85fe080393959
       body: |
