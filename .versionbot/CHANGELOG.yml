@@ -1,4 +1,16 @@
 - commits:
+    - subject: Update dependency tsx to v4.23.15
+      hash: 22afb9537de231d30561fa23ae02f9d8c9454ccb
+      body: |
+        Update tsx from 4.23.13 to 4.23.15
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: balena-renovate[bot]
+  version: 2.1.46
+  title: ""
+  date: 2026-09-28T10:13:04.795Z
+- commits:
     - subject: Update dependency mocha to v12.0.2
       hash: 900230dc89783a71006297dcb81fc546d6ad0304
       body: |
