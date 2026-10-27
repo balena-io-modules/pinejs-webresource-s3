@@ -134,6 +134,55 @@ describe('S3Handler', function () {
 			// X-Amz-Signature should be present in the signed URL
 			expect(result.href).to.match(/X-Amz-Signature=/);
 		});
+
+		describe('signed url cache', function () {
+			let signStub: SinonStub;
+
+			beforeEach(function () {
+				// Stubbed before constructing as the handler memoizes the method itself
+				signStub = sinon
+					.stub(S3Handler.prototype as any, 's3SignUrl')
+					.resolves('https://signed.test.com/file.txt');
+			});
+
+			afterEach(function () {
+				signStub.restore();
+			});
+
+			const handlerWithCacheTime = (signedUrlCacheExpireTimeSeconds?: number) =>
+				new S3Handler({
+					region: 'us-east-1',
+					accessKey: 'test-access-key',
+					secretKey: 'test-secret-key',
+					endpoint: 'https://s3.test.com',
+					bucket: 'test-bucket',
+					signedUrlCacheExpireTimeSeconds,
+				});
+			const webResource = () => ({
+				href: 'https://s3.test.com/test-bucket/file.txt',
+				filename: 'file.txt',
+			});
+
+			it('should reuse a signed url for the same file', async function () {
+				const cachingS3Handler = handlerWithCacheTime();
+
+				await cachingS3Handler.onPreRespond(webResource());
+				const result = await cachingS3Handler.onPreRespond(webResource());
+
+				expect(result.href).to.equal('https://signed.test.com/file.txt');
+				expect(signStub.callCount).to.equal(1);
+			});
+
+			it('should sign every time when the cache time is 0', async function () {
+				const uncachedS3Handler = handlerWithCacheTime(0);
+
+				await uncachedS3Handler.onPreRespond(webResource());
+				const result = await uncachedS3Handler.onPreRespond(webResource());
+
+				expect(result.href).to.equal('https://signed.test.com/file.txt');
+				expect(signStub.callCount).to.equal(2);
+			});
+		});
 	});
 
 	describe('multipartUpload', function () {

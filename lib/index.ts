@@ -76,9 +76,13 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 
 		// Memoize expects maxAge in MS and s3 signing method in seconds.
 		// Normalization to use only seconds and therefore convert here from seconds to MS
-		this.cachedGetSignedUrl = memoize(this.s3SignUrl, {
-			maxAge: this.signedUrlCacheExpireTimeSeconds * 1000,
-		});
+		// memoizee treats a maxAge of 0 as never expiring, so 0 disables the cache instead
+		this.cachedGetSignedUrl =
+			this.signedUrlCacheExpireTimeSeconds > 0
+				? memoize(this.s3SignUrl, {
+						maxAge: this.signedUrlCacheExpireTimeSeconds * 1000,
+					})
+				: this.s3SignUrl;
 		this.storageClass = config.storageClass;
 	}
 
