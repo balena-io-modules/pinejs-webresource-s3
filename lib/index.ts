@@ -36,6 +36,24 @@ const normalizeHref = (href: string) => {
 	return href.split('?')[0];
 };
 
+// Header values have to be printable ASCII: Node rejects characters above \xff and
+// sends \x80-\xff as latin1 bytes whilst the SigV4 signature hashes them as UTF-8.
+// Other names get an ASCII fallback plus an RFC 8187 `filename*` (RFC 6266 section 4.3)
+const getContentDisposition = (filename: string) => {
+	const asciiFilename = filename.replace(/[^\x20-\x7e]|["\\]/g, '_');
+	if (asciiFilename === filename) {
+		return `inline; filename="${filename}"`;
+	}
+	const encodedFilename = Array.from(Buffer.from(filename, 'utf8'), (byte) => {
+		const char = String.fromCharCode(byte);
+		// RFC 8187 attr-char, everything else is percent-encoded
+		return /[\w!#$&+.^`|~-]/.test(char)
+			? char
+			: `%${byte.toString(16).toUpperCase().padStart(2, '0')}`;
+	}).join('');
+	return `inline; filename="${asciiFilename}"; filename*=UTF-8''${encodedFilename}`;
+};
+
 export class S3Handler implements webResourceHandler.WebResourceHandler {
 	private readonly config: S3ClientConfig;
 	private readonly bucket: string;
@@ -96,7 +114,7 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 			Key: key,
 			Body: resource.stream,
 			ContentType: resource.mimetype,
-			ContentDisposition: `inline; filename="${resource.originalname}"`,
+			ContentDisposition: getContentDisposition(resource.originalname),
 			StorageClass: this.storageClass,
 		};
 		const upload = new Upload({ client: this.client, params });
@@ -153,7 +171,7 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 					Bucket: this.bucket,
 					Key: fileKey,
 					ContentType: payload.content_type,
-					ContentDisposition: `inline; filename="${payload.filename}"`,
+					ContentDisposition: getContentDisposition(payload.filename),
 					StorageClass: this.storageClass,
 				}),
 			);
