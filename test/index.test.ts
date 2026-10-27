@@ -15,6 +15,7 @@ import {
 import { mockClient } from 'aws-sdk-client-mock';
 import { S3Handler } from '../lib/index.js';
 import { PassThrough } from 'stream';
+import { inspect } from 'util';
 import { Upload } from '@aws-sdk/lib-storage';
 import type { webResourceHandler } from '@balena/pinejs';
 
@@ -36,6 +37,73 @@ describe('S3Handler', function () {
 			endpoint: 'https://s3.test.com',
 			bucket: 'test-bucket',
 			maxSize: clientMaxSize,
+		});
+	});
+
+	describe('constructor', function () {
+		const requiredProps = {
+			region: 'us-east-1',
+			accessKey: 'test-access-key',
+			secretKey: 'test-secret-key',
+			endpoint: 'https://s3.test.com',
+			bucket: 'test-bucket',
+		};
+
+		const invalidConfigs: Array<
+			[
+				props: Partial<ConstructorParameters<typeof S3Handler>[0]>,
+				message: string,
+			]
+		> = [
+			[
+				{ signedUrlExpireTimeSeconds: 7 * 24 * 60 * 60 + 1 },
+				'signedUrlExpireTimeSeconds must be an integer between 1 and 604800',
+			],
+			[
+				{ signedUrlExpireTimeSeconds: 0 },
+				'signedUrlExpireTimeSeconds must be an integer between 1 and 604800',
+			],
+			[
+				{
+					signedUrlExpireTimeSeconds: 3600,
+					signedUrlCacheExpireTimeSeconds: 3600,
+				},
+				'signedUrlCacheExpireTimeSeconds must be at least 0 and less than signedUrlExpireTimeSeconds',
+			],
+			[
+				{ signedUrlCacheExpireTimeSeconds: -1 },
+				'signedUrlCacheExpireTimeSeconds must be at least 0 and less than signedUrlExpireTimeSeconds',
+			],
+			[
+				{ minimumMultipartUploadSize: 0 },
+				'minimumMultipartUploadSize must be a positive integer',
+			],
+			[
+				{ defaultMultipartUploadSize: 1024 },
+				'defaultMultipartUploadSize must be an integer of at least minimumMultipartUploadSize',
+			],
+			[{ maxSize: NaN }, 'maxSize must be a number of at least 0'],
+		];
+		for (const [props, message] of invalidConfigs) {
+			it(`should reject ${inspect(props, { breakLength: Infinity })}`, function () {
+				expect(() => new S3Handler({ ...requiredProps, ...props })).to.throw(
+					message,
+				);
+			});
+		}
+
+		it('should accept the limits of the valid ranges', function () {
+			expect(
+				() =>
+					new S3Handler({
+						...requiredProps,
+						signedUrlExpireTimeSeconds: 7 * 24 * 60 * 60,
+						signedUrlCacheExpireTimeSeconds: 0,
+						minimumMultipartUploadSize: 1,
+						defaultMultipartUploadSize: 1,
+						maxSize: 0,
+					}),
+			).to.not.throw();
 		});
 	});
 
