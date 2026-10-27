@@ -17,7 +17,7 @@ import { S3Handler } from '../lib/index.ts';
 import { PassThrough } from 'stream';
 import { inspect } from 'util';
 import { Upload } from '@aws-sdk/lib-storage';
-import type { webResourceHandler } from '@balena/pinejs';
+import { errors, type webResourceHandler } from '@balena/pinejs';
 
 chai.use(chaiAsPromised);
 const s3Mock = mockClient(S3Client);
@@ -492,6 +492,78 @@ describe('S3Handler', function () {
 				expect(s3Mock.calls()[0].firstArg.input.Key).to.match(
 					new RegExp(`test_[0-9a-f-]+`),
 				);
+			});
+
+			const invalidPayloads: Array<
+				[
+					description: string,
+					sizes: Pick<
+						webResourceHandler.BeginMultipartUploadPayload,
+						'size' | 'chunk_size'
+					>,
+					message: string,
+				]
+			> = [
+				['a zero size', { size: 0, chunk_size: 512 }, 'Invalid file size'],
+				['a negative size', { size: -1, chunk_size: 512 }, 'Invalid file size'],
+				[
+					'a fractional size',
+					{ size: 1024.5, chunk_size: 512 },
+					'Invalid file size',
+				],
+				[
+					'an unsafe size',
+					{ size: 1e300, chunk_size: 512 },
+					'Invalid file size',
+				],
+				[
+					'a zero chunk size',
+					{ size: 1024, chunk_size: 0 },
+					'Invalid chunk size',
+				],
+				[
+					'a fractional chunk size',
+					{ size: 1024, chunk_size: 512.5 },
+					'Invalid chunk size',
+				],
+				[
+					'more than 10,000 parts',
+					{ size: 10_001 * 512, chunk_size: 512 },
+					'Chunk size is too small, uploads are limited to 10000 parts',
+				],
+			];
+			for (const [description, sizes, message] of invalidPayloads) {
+				it(`should reject ${description} before creating the upload`, async function () {
+					await expect(
+						s3Handler.multipartUpload.begin('test', {
+							filename: 'file.txt',
+							content_type: 'text/plain',
+							...sizes,
+						}),
+					).to.be.rejectedWith(errors.BadRequestError, message);
+					expect(s3Mock.calls()).to.have.lengthOf(0);
+				});
+			}
+
+			it('should allow exactly 10,000 parts', async function () {
+				// Presigning 10,000 urls takes a couple of seconds
+				this.timeout(30000);
+				s3Mock
+					.on(CreateMultipartUploadCommand)
+					.resolves({ UploadId: 'test-upload-id' });
+
+				const result = await s3Handler.multipartUpload.begin('test', {
+					filename: 'file.txt',
+					content_type: 'text/plain',
+					size: 10_000 * 512,
+					chunk_size: 512,
+				});
+
+				expect(result.uploadParts).to.have.lengthOf(10_000);
+				expect(result.uploadParts.at(-1)).to.include({
+					chunkSize: 512,
+					partNumber: 10_000,
+				});
 			});
 		});
 

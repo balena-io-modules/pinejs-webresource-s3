@@ -12,7 +12,7 @@ import {
 } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { webResourceHandler } from '@balena/pinejs';
+import { errors, webResourceHandler } from '@balena/pinejs';
 import memoize from 'memoizee';
 import { randomUUID } from 'node:crypto';
 
@@ -39,6 +39,9 @@ export interface S3HandlerProps {
 
 // The longest a SigV4 presigned url can be valid for, 7 days
 const MAX_SIGNED_URL_EXPIRE_TIME_SECONDS = 7 * 24 * 60 * 60;
+
+// The most parts S3 accepts for a single multipart upload
+const MAX_MULTIPART_UPLOAD_PARTS = 10000;
 
 // Header values have to be printable ASCII: Node rejects characters above \xff and
 // sends \x80-\xff as latin1 bytes whilst the SigV4 signature hashes them as UTF-8.
@@ -211,6 +214,26 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 			fieldName: string,
 			payload: webResourceHandler.BeginMultipartUploadPayload,
 		): Promise<webResourceHandler.BeginMultipartUploadHandlerResponse> => {
+			// pinejs only checks these are numbers, and every part gets a presigned url
+			// so they have to be validated before generating them
+			if (!Number.isSafeInteger(payload.size) || payload.size <= 0) {
+				throw new errors.BadRequestError('Invalid file size');
+			}
+			if (
+				!Number.isSafeInteger(payload.chunk_size) ||
+				payload.chunk_size <= 0
+			) {
+				throw new errors.BadRequestError('Invalid chunk size');
+			}
+			if (
+				Math.ceil(payload.size / payload.chunk_size) >
+				MAX_MULTIPART_UPLOAD_PARTS
+			) {
+				throw new errors.BadRequestError(
+					`Chunk size is too small, uploads are limited to ${MAX_MULTIPART_UPLOAD_PARTS} parts`,
+				);
+			}
+
 			const fileKey = this.getFileKey(fieldName);
 
 			const createMultiPartResponse = await this.client.send(
