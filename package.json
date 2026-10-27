@@ -47,7 +47,7 @@
     "memoizee": "^0.4.17"
   },
   "peerDependencies": {
-    "@balena/pinejs": "^21.3.0 || ^22.0.0 || ^23.0.0 || ^24.0.0"
+    "@balena/pinejs": "^21.3.0 || ^22.0.0 || ^23.0.0 || ^24.0.0 || ^25.0.0"
   },
   "versionist": {
     "publishedAt": "2026-09-29T09:09:51.522Z"
