@@ -27,6 +27,8 @@ export interface S3HandlerProps {
 	maxSize?: number;
 	signedUrlExpireTimeSeconds?: number;
 	signedUrlCacheExpireTimeSeconds?: number;
+	// The least recently used signed urls are evicted past this many files
+	signedUrlCacheMaxEntries?: number;
 	minimumMultipartUploadSize?: number;
 	defaultMultipartUploadSize?: number;
 	storageClass?: StorageClass;
@@ -66,6 +68,7 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 
 	protected readonly signedUrlExpireTimeSeconds: number;
 	protected readonly signedUrlCacheExpireTimeSeconds: number;
+	protected readonly signedUrlCacheMaxEntries: number;
 	protected cachedGetSignedUrl: (fileKey: string) => Promise<string>;
 	protected readonly storageClass: StorageClass | undefined;
 
@@ -86,6 +89,8 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 			config.signedUrlExpireTimeSeconds ?? 86400; // 24h
 		this.signedUrlCacheExpireTimeSeconds =
 			config.signedUrlCacheExpireTimeSeconds ?? 82800; // 22h
+		// Each cached url retains roughly 1.25KB, so ~12.5MB at the default
+		this.signedUrlCacheMaxEntries = config.signedUrlCacheMaxEntries ?? 10000;
 
 		this.minimumMultipartUploadSize =
 			config.minimumMultipartUploadSize ?? 5 * 1024 * 1024; // 5 MB
@@ -141,6 +146,7 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 				? memoize(this.s3SignUrl, {
 						maxAge: this.signedUrlCacheExpireTimeSeconds * 1000,
 						promise: true,
+						max: this.signedUrlCacheMaxEntries,
 					})
 				: this.s3SignUrl;
 		this.storageClass = config.storageClass;
