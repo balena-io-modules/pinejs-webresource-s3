@@ -9,10 +9,11 @@ import {
 	HeadObjectCommand,
 	AbortMultipartUploadCommand,
 	type StorageClass,
+	type CompletedPart,
 } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { webResourceHandler } from '@balena/pinejs';
+import { errors, webResourceHandler } from '@balena/pinejs';
 import memoize from 'memoizee';
 import { randomUUID } from 'node:crypto';
 
@@ -57,6 +58,16 @@ const getContentDisposition = (filename: string) => {
 	}).join('');
 	return `inline; filename="${asciiFilename}"; filename*=UTF-8''${encodedFilename}`;
 };
+
+const isCompletedPartList = (parts: unknown): parts is CompletedPart[] =>
+	Array.isArray(parts) &&
+	parts.every(
+		(part) =>
+			typeof part === 'object' &&
+			part != null &&
+			Number.isSafeInteger(part.PartNumber) &&
+			typeof part.ETag === 'string',
+	);
 
 export class S3Handler implements webResourceHandler.WebResourceHandler {
 	private readonly endpoint: string;
@@ -245,12 +256,20 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 			filename,
 			providerCommitData,
 		}: webResourceHandler.CommitMultipartUploadPayload): Promise<WebResource> => {
+			// providerCommitData comes straight from the commitUpload request body
+			const parts = providerCommitData?.Parts;
+			if (!isCompletedPartList(parts)) {
+				throw new errors.BadRequestError(
+					'providerCommitData must have `Parts` with a `PartNumber` and `ETag` for each uploaded part',
+				);
+			}
+
 			await this.client.send(
 				new CompleteMultipartUploadCommand({
 					Bucket: this.bucket,
 					Key: fileKey,
 					UploadId: uploadId,
-					MultipartUpload: providerCommitData,
+					MultipartUpload: { Parts: parts },
 				}),
 			);
 
