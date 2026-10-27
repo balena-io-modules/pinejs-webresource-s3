@@ -1,4 +1,15 @@
 - commits:
+    - subject: Mark pinejs 25.x as compatible
+      hash: c41f9e36ecdd9215735cac36b7e04652b4131702
+      body: ""
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: Pagan Gazzard
+  version: 2.1.48
+  title: ""
+  date: 2026-10-27T15:17:14.298Z
+- commits:
     - subject: Update dependency lint-staged to v17.6.0
       hash: f3330935e95ed592b425402a8020e0d2d6723efb
       body: |
