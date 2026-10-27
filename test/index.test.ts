@@ -17,7 +17,7 @@ import { S3Handler } from '../lib/index.js';
 import { PassThrough } from 'stream';
 import { inspect } from 'util';
 import { Upload } from '@aws-sdk/lib-storage';
-import type { webResourceHandler } from '@balena/pinejs';
+import { errors, type webResourceHandler } from '@balena/pinejs';
 
 chai.use(chaiAsPromised);
 const s3Mock = mockClient(S3Client);
@@ -536,6 +536,59 @@ describe('S3Handler', function () {
 				expect(s3Mock.calls()[0].firstArg.input.Key).to.match(
 					new RegExp(`test_[0-9a-f-]+`),
 				);
+			});
+
+			describe('maxMultipartUploadSize', function () {
+				const maxMultipartUploadSize = 10 * 1024;
+				let limitedS3Handler: S3Handler;
+				beforeEach(function () {
+					limitedS3Handler = new S3Handler({
+						region: 'us-east-1',
+						accessKey: 'test-access-key',
+						secretKey: 'test-secret-key',
+						endpoint: 'https://s3.test.com',
+						bucket: 'test-bucket',
+						maxMultipartUploadSize,
+					});
+					s3Mock
+						.on(CreateMultipartUploadCommand)
+						.resolves({ UploadId: 'test-upload-id' });
+				});
+
+				it('should reject a size over the limit before creating the upload', async function () {
+					await expect(
+						limitedS3Handler.multipartUpload.begin('test', {
+							filename: 'file.txt',
+							content_type: 'text/plain',
+							size: maxMultipartUploadSize + 1,
+							chunk_size: maxMultipartUploadSize + 1,
+						}),
+					).to.be.rejectedWith(
+						errors.BadRequestError,
+						'File size exceeded the limit of 10240 bytes.',
+					);
+					expect(s3Mock.calls()).to.have.lengthOf(0);
+				});
+
+				it('should allow a size equal to the limit', async function () {
+					const result = await limitedS3Handler.multipartUpload.begin('test', {
+						filename: 'file.txt',
+						content_type: 'text/plain',
+						size: maxMultipartUploadSize,
+						chunk_size: maxMultipartUploadSize,
+					});
+					expect(result.uploadParts).to.have.lengthOf(1);
+				});
+
+				it('should not limit the size by default, even past maxSize', async function () {
+					const result = await s3Handler.multipartUpload.begin('test', {
+						filename: 'file.txt',
+						content_type: 'text/plain',
+						size: clientMaxSize * 10,
+						chunk_size: clientMaxSize * 10,
+					});
+					expect(result.uploadParts).to.have.lengthOf(1);
+				});
 			});
 
 			describe('commit', function () {
