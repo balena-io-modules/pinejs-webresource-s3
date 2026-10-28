@@ -1,4 +1,15 @@
 - commits:
+    - subject: Switch from tsx to nodejs type stripping
+      hash: f6b11d556afb882d60e4d62900e65cc989e2b501
+      body: ""
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: Pagan Gazzard
+  version: 2.2.5
+  title: ""
+  date: 2026-10-28T16:43:04.574Z
+- commits:
     - subject: Take the WebResource type from pinejs rather than sbvr-types
       hash: 65c1b71e8145a41e05e2a29c39a490d052bef5b4
       body: |
