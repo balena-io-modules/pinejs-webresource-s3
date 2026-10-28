@@ -13,7 +13,7 @@ import {
 } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { webResourceHandler } from '@balena/pinejs';
+import { errors, webResourceHandler } from '@balena/pinejs';
 
 import type { WebResourceType as WebResource } from '@balena/sbvr-types';
 import memoize from 'memoizee';
@@ -29,6 +29,8 @@ export interface S3HandlerProps {
 	signedUrlCacheExpireTimeSeconds?: number;
 	minimumMultipartUploadSize?: number;
 	defaultMultipartUploadSize?: number;
+	// Limits the `size` declared when beginning a multipart upload, unlimited by default
+	maxMultipartUploadSize?: number;
 	storageClass?: StorageClass;
 }
 
@@ -63,6 +65,7 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 	private readonly maxFileSize: number;
 	private readonly defaultMultipartUploadSize: number;
 	private readonly minimumMultipartUploadSize: number;
+	private readonly maxMultipartUploadSize: number | undefined;
 
 	protected readonly signedUrlExpireTimeSeconds: number;
 	protected readonly signedUrlCacheExpireTimeSeconds: number;
@@ -91,6 +94,7 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 			config.minimumMultipartUploadSize ?? 5 * 1024 * 1024; // 5 MB
 		this.defaultMultipartUploadSize =
 			config.defaultMultipartUploadSize ?? 10 * 1024 * 1024; // 5 MB
+		this.maxMultipartUploadSize = config.maxMultipartUploadSize;
 		this.maxFileSize = config.maxSize ?? 52428800;
 
 		// Reject values that could never work rather than failing on every request
@@ -205,6 +209,18 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 			fieldName: string,
 			payload: webResourceHandler.BeginMultipartUploadPayload,
 		): Promise<webResourceHandler.BeginMultipartUploadHandlerResponse> => {
+			if (
+				this.maxMultipartUploadSize != null &&
+				payload.size > this.maxMultipartUploadSize
+			) {
+				// pine only translates FileSizeExceededError into a 400 for direct uploads
+				throw new errors.BadRequestError(
+					new webResourceHandler.FileSizeExceededError(
+						this.maxMultipartUploadSize,
+					).message,
+				);
+			}
+
 			const fileKey = this.getFileKey(fieldName);
 
 			const createMultiPartResponse = await this.client.send(
