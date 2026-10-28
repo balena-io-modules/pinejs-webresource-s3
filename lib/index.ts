@@ -37,10 +37,6 @@ export interface S3HandlerProps {
 // The longest a SigV4 presigned url can be valid for, 7 days
 const MAX_SIGNED_URL_EXPIRE_TIME_SECONDS = 7 * 24 * 60 * 60;
 
-const normalizeHref = (href: string) => {
-	return href.split('?')[0];
-};
-
 // Header values have to be printable ASCII: Node rejects characters above \xff and
 // sends \x80-\xff as latin1 bytes whilst the SigV4 signature hashes them as UTF-8.
 // Other names get an ASCII fallback plus an RFC 8187 `filename*` (RFC 6266 section 4.3)
@@ -306,7 +302,7 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 	}
 
 	private getKeyFromHref(href: string): string {
-		const hrefWithoutParams = normalizeHref(href);
+		const hrefWithoutParams = webResourceHandler.normalizeHref(href);
 		return hrefWithoutParams.substring(hrefWithoutParams.lastIndexOf('/') + 1);
 	}
 
