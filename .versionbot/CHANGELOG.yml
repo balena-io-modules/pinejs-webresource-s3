@@ -1,4 +1,21 @@
 - commits:
+    - subject: Cap the signed url cache with `signedUrlCacheMaxEntries`
+      hash: 32fbfaa071ccd44f5a4bc4c5aa70e787ba2a0349
+      body: |
+        The memoized signed urls were only bounded by their expiry, so every
+        distinct file served in the last `signedUrlCacheExpireTimeSeconds` (22h
+        by default) stayed in memory, roughly 1.25KB each per worker. The new
+        `signedUrlCacheMaxEntries` prop (default 10,000, ~12.5MB) evicts the
+        least recently used urls past that; it is protected so subclasses with
+        their own cache, like the CloudFront handler, can apply it too.
+      footer:
+        Change-type: minor
+        change-type: minor
+      author: Pagan Gazzard
+  version: 2.2.0
+  title: ""
+  date: 2026-10-28T14:25:05.563Z
+- commits:
     - subject: Do not cache failed url signings
       hash: dca88b276c7c306465b9ccccc1246277efcc9606
       body: |
