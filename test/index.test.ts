@@ -17,7 +17,7 @@ import { S3Handler } from '../lib/index.ts';
 import { PassThrough } from 'stream';
 import { inspect } from 'util';
 import { Upload } from '@aws-sdk/lib-storage';
-import type { webResourceHandler } from '@balena/pinejs';
+import { errors, type webResourceHandler } from '@balena/pinejs';
 
 chai.use(chaiAsPromised);
 const s3Mock = mockClient(S3Client);
@@ -502,11 +502,15 @@ describe('S3Handler', function () {
 					.on(HeadObjectCommand)
 					.resolves({ ContentLength: 1024, ContentType: 'text/plain' });
 
+				const parts = [
+					{ PartNumber: 1, ETag: '"etag-1"' },
+					{ PartNumber: 2, ETag: '"etag-2"' },
+				];
 				const payload = {
 					fileKey: 'test-key',
 					uploadId: 'test-upload-id',
 					filename: 'file.txt',
-					providerCommitData: {},
+					providerCommitData: { Parts: parts },
 				};
 				const result = await s3Handler.multipartUpload.commit(payload);
 
@@ -523,9 +527,36 @@ describe('S3Handler', function () {
 					Bucket: 'test-bucket',
 					Key: 'test-key',
 					UploadId: 'test-upload-id',
-					MultipartUpload: {},
+					MultipartUpload: { Parts: parts },
 				});
 			});
+
+			const invalidProviderCommitData: Array<
+				webResourceHandler.CommitMultipartUploadPayload['providerCommitData']
+			> = [
+				undefined,
+				{},
+				{ Parts: 'not-an-array' },
+				{ Parts: [{ PartNumber: '1', ETag: '"etag-1"' }] },
+				{ Parts: [{ PartNumber: 1 }] },
+				{ Parts: [null] },
+			];
+			for (const providerCommitData of invalidProviderCommitData) {
+				it(`should reject providerCommitData ${inspect(providerCommitData, { breakLength: Infinity })} without contacting S3`, async function () {
+					await expect(
+						s3Handler.multipartUpload.commit({
+							fileKey: 'test-key',
+							uploadId: 'test-upload-id',
+							filename: 'file.txt',
+							providerCommitData,
+						}),
+					).to.be.rejectedWith(
+						errors.BadRequestError,
+						'providerCommitData must have `Parts` with a `PartNumber` and `ETag` for each uploaded part',
+					);
+					expect(s3Mock.calls()).to.have.lengthOf(0);
+				});
+			}
 		});
 
 		describe('cancel', function () {
