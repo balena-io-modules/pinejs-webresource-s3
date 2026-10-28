@@ -10,6 +10,7 @@ import {
 	CompleteMultipartUploadCommand,
 	HeadObjectCommand,
 	AbortMultipartUploadCommand,
+	PutObjectCommand,
 } from '@aws-sdk/client-s3';
 import { mockClient } from 'aws-sdk-client-mock';
 import { S3Handler } from '../lib/index.js';
@@ -183,6 +184,67 @@ describe('S3Handler', function () {
 				expect(signStub.callCount).to.equal(2);
 			});
 		});
+	});
+
+	describe('Content-Disposition', function () {
+		const cases: Array<[filename: string, contentDisposition: string]> = [
+			['file.txt', 'inline; filename="file.txt"'],
+			[
+				'naïve.txt',
+				`inline; filename="na_ve.txt"; filename*=UTF-8''na%C3%AFve.txt`,
+			],
+			[
+				'文件.txt',
+				`inline; filename="__.txt"; filename*=UTF-8''%E6%96%87%E4%BB%B6.txt`,
+			],
+			[
+				'a"; filename="evil.exe',
+				`inline; filename="a_; filename=_evil.exe"; filename*=UTF-8''a%22%3B%20filename%3D%22evil.exe`,
+			],
+			[
+				'back\\slash.txt',
+				`inline; filename="back_slash.txt"; filename*=UTF-8''back%5Cslash.txt`,
+			],
+		];
+
+		for (const [filename, contentDisposition] of cases) {
+			it(`should send an ASCII header for ${JSON.stringify(filename)} in handleFile`, async function () {
+				s3Mock.on(PutObjectCommand).resolves({});
+				const stream = new PassThrough();
+				stream.end('content');
+
+				await s3Handler.handleFile({
+					fieldname: 'test',
+					originalname: filename,
+					stream,
+					mimetype: 'text/plain',
+					encoding: '7bit',
+				});
+
+				const [putCall] = s3Mock.commandCalls(PutObjectCommand);
+				expect(putCall.args[0].input.ContentDisposition)
+					.to.equal(contentDisposition)
+					.and.to.match(/^[\x20-\x7e]*$/);
+			});
+
+			it(`should send an ASCII header for ${JSON.stringify(filename)} in multipartUpload.begin`, async function () {
+				s3Mock
+					.on(CreateMultipartUploadCommand)
+					.resolves({ UploadId: 'test-upload-id' });
+
+				await s3Handler.multipartUpload.begin('test', {
+					filename,
+					content_type: 'text/plain',
+					size: 1024,
+					chunk_size: 1024,
+				});
+
+				const [createCall] = s3Mock.commandCalls(CreateMultipartUploadCommand);
+				expect(createCall.args[0].input.ContentDisposition)
+					.to.equal(contentDisposition)
+					.and.to.match(/^[\x20-\x7e]*$/);
+			});
+		}
 	});
 
 	describe('multipartUpload', function () {
