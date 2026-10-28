@@ -1,4 +1,22 @@
 - commits:
+    - subject: Validate `providerCommitData` before completing a multipart upload
+      hash: e02b3e1f7be3f3c4337f11e70ba27edf2f2d4b81
+      body: |
+        `providerCommitData` comes straight from the commitUpload request body
+        and was passed to CompleteMultipartUpload as-is, which its `any` typing
+        allowed. A missing or malformed value still made a round trip to S3
+        (`Parts: 'not-an-array'` was even serialized character by character)
+        and S3's error then surfaced as a 500. It is now checked to be a list
+        of parts with a `PartNumber` and `ETag`, rejecting anything else with a
+        400, and typed as `CompletedPart[]`.
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: Pagan Gazzard
+  version: 2.2.6
+  title: ""
+  date: 2026-10-28T17:31:38.648Z
+- commits:
     - subject: Switch from tsx to nodejs type stripping
       hash: f6b11d556afb882d60e4d62900e65cc989e2b501
       body: ""
