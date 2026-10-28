@@ -1,4 +1,18 @@
 - commits:
+    - subject: Disable the signed url cache when its expiry is 0
+      hash: 7759b515b77531b49e917820e8ce62d8a8efe514
+      body: |
+        memoizee only applies `maxAge` when it is truthy, so a
+        `signedUrlCacheExpireTimeSeconds` of 0 cached each file's signed url
+        forever, serving it long after it expired. 0 now skips the cache.
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: Pagan Gazzard
+  version: 2.1.49
+  title: ""
+  date: 2026-10-28T11:09:26.567Z
+- commits:
     - subject: Mark pinejs 25.x as compatible
       hash: c41f9e36ecdd9215735cac36b7e04652b4131702
       body: ""
