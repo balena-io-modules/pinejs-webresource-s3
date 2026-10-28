@@ -156,6 +156,7 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 				? memoize(this.s3SignUrl, {
 						maxAge: this.signedUrlCacheExpireTimeSeconds * 1000,
 						promise: true,
+						primitive: true,
 						max: this.signedUrlCacheMaxEntries,
 					})
 				: this.s3SignUrl;
