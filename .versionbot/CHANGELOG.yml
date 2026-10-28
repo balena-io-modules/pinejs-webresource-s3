@@ -1,4 +1,26 @@
 - commits:
+    - subject: Reject config values that can never work at construction
+      hash: d94ba64fb48a13ab0ed585df305bb26deb4108ff
+      body: |
+        These were accepted and then failed on every request instead:
+        - `signedUrlExpireTimeSeconds` over 7 days (the SigV4 maximum) makes
+          every signing, and so every `onPreRespond`, reject
+        - `signedUrlCacheExpireTimeSeconds` not below the expiry serves urls
+          from the cache after they have expired
+        - `defaultMultipartUploadSize` below `minimumMultipartUploadSize` makes
+          every `beginUpload` without a `chunk_size` fail as too small
+        - a non-positive or fractional `minimumMultipartUploadSize` allows zero
+          or fractional chunk sizes
+        - a `NaN` `maxSize` (eg an unset env var through `parseInt`) silently
+          disables the size limit
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: Pagan Gazzard
+  version: 2.1.51
+  title: ""
+  date: 2026-10-28T12:26:58.510Z
+- commits:
     - subject: Encode non-ASCII filenames in Content-Disposition
       hash: 857490ea24ad1eb2917a672a31e296b56dac33bf
       body: >
