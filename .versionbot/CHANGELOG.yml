@@ -1,4 +1,15 @@
 - commits:
+    - subject: Use primitive mode for memoizee for improved performance
+      hash: 5e3e0f10c22ceee3c2efc3f48bbff89508ec543d
+      body: ""
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: Pagan Gazzard
+  version: 2.2.7
+  title: ""
+  date: 2026-10-28T23:38:34.069Z
+- commits:
     - subject: Validate `providerCommitData` before completing a multipart upload
       hash: e02b3e1f7be3f3c4337f11e70ba27edf2f2d4b81
       body: |
