@@ -1,4 +1,23 @@
 - commits:
+    - subject: Tighten internal typings
+      hash: 3c24e16a675633616e139b0612012a66408e8d76
+      body: |
+        - Store the endpoint as a string rather than keeping the whole
+          `S3ClientConfig` around just to read its `endpoint`, which is typed
+          as a union including endpoint providers yet was interpolated into the
+          file href
+        - Make `client`, `cachedGetSignedUrl` and `multipartUpload` readonly
+        - Drop the `any` from `catch (err: any)`
+        - Fix the comment on the 10 MB default part size
+        - Declare `@types/memoizee`, which was only resolved via pinejs' deps
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: Pagan Gazzard
+  version: 2.2.3
+  title: ""
+  date: 2026-10-28T16:07:08.690Z
+- commits:
     - subject: Remove duplicated tests and move the mocha spec to .mocharc.json
       hash: 8256ec805818980326e5375eceb5ea7f42bebfb2
       body: |
