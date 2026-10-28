@@ -1,4 +1,20 @@
 - commits:
+    - subject: Do not cache failed url signings
+      hash: dca88b276c7c306465b9ccccc1246277efcc9606
+      body: |
+        memoizee caches whatever the function returns, including a rejected
+        promise, so a single failed signing (eg a credentials or endpoint
+        resolution hiccup) made `onPreRespond` keep rejecting for that file for
+        the whole `signedUrlCacheExpireTimeSeconds` (22h by default). With
+        `promise: true` rejections are evicted so the next request retries.
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: Pagan Gazzard
+  version: 2.1.52
+  title: ""
+  date: 2026-10-28T12:47:46.127Z
+- commits:
     - subject: Reject config values that can never work at construction
       hash: d94ba64fb48a13ab0ed585df305bb26deb4108ff
       body: |
