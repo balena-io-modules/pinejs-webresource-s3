@@ -32,6 +32,9 @@ export interface S3HandlerProps {
 	storageClass?: StorageClass;
 }
 
+// The longest a SigV4 presigned url can be valid for, 7 days
+const MAX_SIGNED_URL_EXPIRE_TIME_SECONDS = 7 * 24 * 60 * 60;
+
 const normalizeHref = (href: string) => {
 	return href.split('?')[0];
 };
@@ -89,6 +92,44 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 		this.defaultMultipartUploadSize =
 			config.defaultMultipartUploadSize ?? 10 * 1024 * 1024; // 5 MB
 		this.maxFileSize = config.maxSize ?? 52428800;
+
+		// Reject values that could never work rather than failing on every request
+		if (
+			!Number.isSafeInteger(this.signedUrlExpireTimeSeconds) ||
+			this.signedUrlExpireTimeSeconds <= 0 ||
+			this.signedUrlExpireTimeSeconds > MAX_SIGNED_URL_EXPIRE_TIME_SECONDS
+		) {
+			throw new Error(
+				`signedUrlExpireTimeSeconds must be an integer between 1 and ${MAX_SIGNED_URL_EXPIRE_TIME_SECONDS}`,
+			);
+		}
+		if (
+			Number.isNaN(this.signedUrlCacheExpireTimeSeconds) ||
+			this.signedUrlCacheExpireTimeSeconds < 0 ||
+			this.signedUrlCacheExpireTimeSeconds >= this.signedUrlExpireTimeSeconds
+		) {
+			throw new Error(
+				'signedUrlCacheExpireTimeSeconds must be at least 0 and less than signedUrlExpireTimeSeconds',
+			);
+		}
+		if (
+			!Number.isSafeInteger(this.minimumMultipartUploadSize) ||
+			this.minimumMultipartUploadSize <= 0
+		) {
+			throw new Error('minimumMultipartUploadSize must be a positive integer');
+		}
+		if (
+			!Number.isSafeInteger(this.defaultMultipartUploadSize) ||
+			this.defaultMultipartUploadSize < this.minimumMultipartUploadSize
+		) {
+			throw new Error(
+				'defaultMultipartUploadSize must be an integer of at least minimumMultipartUploadSize',
+			);
+		}
+		if (Number.isNaN(this.maxFileSize) || this.maxFileSize < 0) {
+			throw new Error('maxSize must be a number of at least 0');
+		}
+
 		this.bucket = config.bucket;
 		this.client = new S3Client(this.config);
 
