@@ -13,7 +13,7 @@ import {
 	PutObjectCommand,
 } from '@aws-sdk/client-s3';
 import { mockClient } from 'aws-sdk-client-mock';
-import { S3Handler } from '../lib/index.js';
+import { S3Handler } from '../lib/index.ts';
 import { PassThrough } from 'stream';
 import { inspect } from 'util';
 import { Upload } from '@aws-sdk/lib-storage';
