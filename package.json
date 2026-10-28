@@ -6,7 +6,7 @@
   "main": "build/index.js",
   "scripts": {
     "build": "tsc --project tsconfig.build.json",
-    "test": "npm run lint && mocha test/**/*.ts",
+    "test": "npm run lint && mocha",
     "lint-fix": "balena-lint -e ts --fix lib test",
     "lint": "balena-lint -e ts lib test && npx tsc --noEmit",
     "prepare": "node -e \"try { (await import('husky')).default() } catch (e) { if (e.code !== 'ERR_MODULE_NOT_FOUND') throw e }\" --input-type module"
