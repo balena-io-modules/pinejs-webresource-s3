@@ -1,4 +1,15 @@
 - commits:
+    - subject: Use pinejs' exported `normalizeHref` rather than a local copy
+      hash: 7a4cf7b15d58e3cf02b1dcfed7ac2ca5692dfdd5
+      body: ""
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: Pagan Gazzard
+  version: 2.2.1
+  title: ""
+  date: 2026-10-28T15:42:50.045Z
+- commits:
     - subject: Cap the signed url cache with `signedUrlCacheMaxEntries`
       hash: 32fbfaa071ccd44f5a4bc4c5aa70e787ba2a0349
       body: |
