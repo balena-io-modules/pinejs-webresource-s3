@@ -1,4 +1,23 @@
 - commits:
+    - subject: Remove duplicated tests and move the mocha spec to .mocharc.json
+      hash: 8256ec805818980326e5375eceb5ea7f42bebfb2
+      body: |
+        - Five `multipartUpload.begin` tests were duplicated verbatim
+        - `commit` and `cancel` were nested inside `describe('begin')`
+        - The unquoted `mocha test/**/*.ts` was being expanded by sh, where `**`
+          acts as `*`: it only worked because nothing matched `test/*/*.ts` so
+          the literal glob reached mocha, and adding any test subdirectory would
+          have silently stopped `test/index.test.ts` from running. Mocha now
+          reads the spec from its config, which also avoids shell quoting
+          differences on Windows
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: Pagan Gazzard
+  version: 2.2.2
+  title: ""
+  date: 2026-10-28T16:02:13.050Z
+- commits:
     - subject: Use pinejs' exported `normalizeHref` rather than a local copy
       hash: 7a4cf7b15d58e3cf02b1dcfed7ac2ca5692dfdd5
       body: ""
