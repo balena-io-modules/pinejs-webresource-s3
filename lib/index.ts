@@ -140,6 +140,7 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 			this.signedUrlCacheExpireTimeSeconds > 0
 				? memoize(this.s3SignUrl, {
 						maxAge: this.signedUrlCacheExpireTimeSeconds * 1000,
+						promise: true,
 					})
 				: this.s3SignUrl;
 		this.storageClass = config.storageClass;

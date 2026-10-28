@@ -251,6 +251,21 @@ describe('S3Handler', function () {
 				expect(result.href).to.equal('https://signed.test.com/file.txt');
 				expect(signStub.callCount).to.equal(2);
 			});
+
+			it('should not cache a failed signing', async function () {
+				const cachingS3Handler = handlerWithCacheTime();
+				signStub.onFirstCall().rejects(new Error('Transient signing failure'));
+
+				await expect(
+					cachingS3Handler.onPreRespond(webResource()),
+				).to.be.rejectedWith('Transient signing failure');
+				// memoizee evicts a rejection on the next tick, ie before any later request
+				await new Promise((resolve) => setImmediate(resolve));
+				const result = await cachingS3Handler.onPreRespond(webResource());
+
+				expect(result.href).to.equal('https://signed.test.com/file.txt');
+				expect(signStub.callCount).to.equal(2);
+			});
 		});
 	});
 
