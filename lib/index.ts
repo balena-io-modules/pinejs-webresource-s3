@@ -13,10 +13,14 @@ import {
 import { Upload } from '@aws-sdk/lib-storage';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { webResourceHandler } from '@balena/pinejs';
-
-import type { WebResourceType as WebResource } from '@balena/sbvr-types';
 import memoize from 'memoizee';
 import { randomUUID } from 'node:crypto';
+
+// Taken from pine as @balena/sbvr-types is not one of our dependencies
+type WebResource = Parameters<
+	webResourceHandler.WebResourceHandler['onPreRespond']
+>[0];
+
 export interface S3HandlerProps {
 	region: string;
 	accessKey: string;
