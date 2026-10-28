@@ -11,13 +11,15 @@ import {
 	HeadObjectCommand,
 	AbortMultipartUploadCommand,
 	PutObjectCommand,
+	UploadPartCommand,
 } from '@aws-sdk/client-s3';
 import { mockClient } from 'aws-sdk-client-mock';
 import { S3Handler } from '../lib/index.js';
-import { PassThrough } from 'stream';
+import { PassThrough, Readable } from 'stream';
 import { inspect } from 'util';
+import { once } from 'events';
 import { Upload } from '@aws-sdk/lib-storage';
-import type { webResourceHandler } from '@balena/pinejs';
+import { webResourceHandler } from '@balena/pinejs';
 
 chai.use(chaiAsPromised);
 const s3Mock = mockClient(S3Client);
@@ -134,29 +136,6 @@ describe('S3Handler', function () {
 			expect(result).to.have.property('filename');
 		});
 
-		it('should throw an error when file exceeds maxFileSize', async function () {
-			uploadStub.restore();
-			uploadStub = sinon.stub(Upload.prototype, 'done').callsFake(function (
-				this: Upload,
-			) {
-				this.emit('httpUploadProgress', { total: clientMaxSize + 1 });
-				throw new Error('Upload aborted due to file size limit');
-			});
-
-			const stream = new PassThrough();
-			const resource = {
-				fieldname: 'test',
-				originalname: 'large-file.txt',
-				stream,
-				mimetype: 'text/plain',
-				encoding: 'utf-8',
-			};
-
-			await expect(s3Handler.handleFile(resource)).to.be.rejectedWith(
-				'File size exceeded the limit of 1048576 bytes.',
-			);
-		});
-
 		it('should handle upload failures and throw an error', async function () {
 			uploadStub.restore();
 			uploadStub = sinon.stub(Upload.prototype, 'done').callsFake(function () {
@@ -175,6 +154,116 @@ describe('S3Handler', function () {
 			await expect(s3Handler.handleFile(resource)).to.be.rejectedWith(
 				'S3 upload failed',
 			);
+		});
+	});
+
+	describe('handleFile size limit', function () {
+		const MiB = 1024 * 1024;
+		const fileOfSize = (size: number) =>
+			Readable.from(
+				(function* () {
+					for (let sent = 0; sent < size; sent += MiB) {
+						yield Buffer.alloc(Math.min(MiB, size - sent));
+					}
+				})(),
+			);
+		const resourceFor = (stream: Readable) => ({
+			fieldname: 'test',
+			originalname: 'file.bin',
+			stream,
+			mimetype: 'application/octet-stream',
+			encoding: '7bit',
+		});
+
+		beforeEach(function () {
+			s3Mock.on(PutObjectCommand).resolves({});
+			s3Mock
+				.on(CreateMultipartUploadCommand)
+				.resolves({ UploadId: 'test-upload-id' });
+			s3Mock.on(UploadPartCommand).resolves({ ETag: '"etag"' });
+			s3Mock.on(CompleteMultipartUploadCommand).resolves({});
+			s3Mock.on(AbortMultipartUploadCommand).resolves({});
+		});
+
+		it('should reject a file over maxSize without uploading it when it fits in one part', async function () {
+			const stream = fileOfSize(3 * clientMaxSize);
+
+			await expect(
+				s3Handler.handleFile(resourceFor(stream)),
+			).to.be.rejectedWith(
+				webResourceHandler.FileSizeExceededError,
+				'File size exceeded the limit of 1048576 bytes.',
+			);
+
+			expect(s3Mock.calls()).to.have.lengthOf(0);
+			// The rest of the file is drained so the request can carry on being parsed
+			if (!stream.readableEnded) {
+				await once(stream, 'end');
+			}
+		});
+
+		it('should abort a multipart upload that goes over maxSize', async function () {
+			const multipartS3Handler = new S3Handler({
+				region: 'us-east-1',
+				accessKey: 'test-access-key',
+				secretKey: 'test-secret-key',
+				endpoint: 'https://s3.test.com',
+				bucket: 'test-bucket',
+				maxSize: 6 * MiB,
+			});
+
+			await expect(
+				multipartS3Handler.handleFile(resourceFor(fileOfSize(20 * MiB))),
+			).to.be.rejectedWith(
+				webResourceHandler.FileSizeExceededError,
+				'File size exceeded the limit of 6291456 bytes.',
+			);
+
+			expect(s3Mock.commandCalls(AbortMultipartUploadCommand)).to.have.lengthOf(
+				1,
+			);
+			expect(
+				s3Mock.commandCalls(CompleteMultipartUploadCommand),
+			).to.have.lengthOf(0);
+		});
+
+		it('should accept a file of exactly maxSize and return its size', async function () {
+			const result = await s3Handler.handleFile(
+				resourceFor(fileOfSize(clientMaxSize)),
+			);
+
+			expect(result.size).to.equal(clientMaxSize);
+			expect(s3Mock.commandCalls(PutObjectCommand)).to.have.lengthOf(1);
+		});
+
+		it('should return the size of a multipart upload', async function () {
+			const multipartS3Handler = new S3Handler({
+				region: 'us-east-1',
+				accessKey: 'test-access-key',
+				secretKey: 'test-secret-key',
+				endpoint: 'https://s3.test.com',
+				bucket: 'test-bucket',
+			});
+
+			const result = await multipartS3Handler.handleFile(
+				resourceFor(fileOfSize(12 * MiB)),
+			);
+
+			expect(result.size).to.equal(12 * MiB);
+			expect(s3Mock.commandCalls(UploadPartCommand)).to.have.lengthOf(3);
+			expect(
+				s3Mock.commandCalls(CompleteMultipartUploadCommand),
+			).to.have.lengthOf(1);
+		});
+
+		it('should reject with the error of the incoming stream', async function () {
+			const stream = new PassThrough();
+			stream.write(Buffer.alloc(1024));
+			setImmediate(() => stream.destroy(new Error('Client disconnected')));
+
+			await expect(
+				s3Handler.handleFile(resourceFor(stream)),
+			).to.be.rejectedWith('Client disconnected');
 		});
 	});
 

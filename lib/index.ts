@@ -18,6 +18,7 @@ import { webResourceHandler } from '@balena/pinejs';
 import type { WebResourceType as WebResource } from '@balena/sbvr-types';
 import memoize from 'memoizee';
 import { randomUUID } from 'node:crypto';
+import { Transform } from 'node:stream';
 export interface S3HandlerProps {
 	region: string;
 	accessKey: string;
@@ -150,30 +151,39 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 	): Promise<webResourceHandler.UploadResponse> {
 		let size = 0;
 		const key = this.getFileKey(resource.fieldname);
+		// Count the bytes as they are read so that an oversized file errors before it is sent,
+		// upload progress is only reported once a part has been uploaded, and a file smaller
+		// than a part is uploaded with a single PutObject that would already have completed
+		const body = new Transform({
+			transform: (chunk: Buffer, _encoding, callback) => {
+				size += chunk.length;
+				if (size > this.maxFileSize) {
+					callback(
+						new webResourceHandler.FileSizeExceededError(this.maxFileSize),
+					);
+					return;
+				}
+				callback(null, chunk);
+			},
+		});
+		resource.stream.on('error', (err) => body.destroy(err));
+		resource.stream.pipe(body);
 		const params: PutObjectCommandInput = {
 			Bucket: this.bucket,
 			Key: key,
-			Body: resource.stream,
+			Body: body,
 			ContentType: resource.mimetype,
 			ContentDisposition: getContentDisposition(resource.originalname),
 			StorageClass: this.storageClass,
 		};
 		const upload = new Upload({ client: this.client, params });
 
-		upload.on('httpUploadProgress', async (ev) => {
-			size = ev.total ?? ev.loaded!;
-			if (size > this.maxFileSize) {
-				await upload.abort();
-			}
-		});
-
 		try {
 			await upload.done();
-		} catch (err: any) {
+		} catch (err) {
+			// Drain the rest of the file so that the remainder of the request can still be parsed
+			resource.stream.unpipe(body);
 			resource.stream.resume();
-			if (size > this.maxFileSize) {
-				throw new webResourceHandler.FileSizeExceededError(this.maxFileSize);
-			}
 			throw err;
 		}
 
