@@ -1,4 +1,26 @@
 - commits:
+    - subject: Encode non-ASCII filenames in Content-Disposition
+      hash: 857490ea24ad1eb2917a672a31e296b56dac33bf
+      body: >
+        The filename was interpolated as-is, so names containing characters
+        above
+
+        \xff made Node reject the header (ERR_INVALID_CHAR) and fail the upload,
+
+        \x80-\xff were sent as latin1 whilst SigV4 signs them as UTF-8, and `"`
+
+        or `\` broke out of the quoted-string. Names that are not plain
+        printable
+
+        ASCII now get an ASCII fallback `filename` plus an RFC 8187 `filename*`.
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: Pagan Gazzard
+  version: 2.1.50
+  title: ""
+  date: 2026-10-28T12:19:23.999Z
+- commits:
     - subject: Disable the signed url cache when its expiry is 0
       hash: 7759b515b77531b49e917820e8ce62d8a8efe514
       body: |
