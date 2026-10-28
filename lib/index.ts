@@ -3,7 +3,6 @@ import {
 	GetObjectCommand,
 	S3Client,
 	type PutObjectCommandInput,
-	type S3ClientConfig,
 	CreateMultipartUploadCommand,
 	UploadPartCommand,
 	CompleteMultipartUploadCommand,
@@ -56,7 +55,7 @@ const getContentDisposition = (filename: string) => {
 };
 
 export class S3Handler implements webResourceHandler.WebResourceHandler {
-	private readonly config: S3ClientConfig;
+	private readonly endpoint: string;
 	private readonly bucket: string;
 	private readonly maxFileSize: number;
 	private readonly defaultMultipartUploadSize: number;
@@ -65,21 +64,13 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 	protected readonly signedUrlExpireTimeSeconds: number;
 	protected readonly signedUrlCacheExpireTimeSeconds: number;
 	protected readonly signedUrlCacheMaxEntries: number;
-	protected cachedGetSignedUrl: (fileKey: string) => Promise<string>;
+	protected readonly cachedGetSignedUrl: (fileKey: string) => Promise<string>;
 	protected readonly storageClass: StorageClass | undefined;
 
-	private client: S3Client;
+	private readonly client: S3Client;
 
 	constructor(config: S3HandlerProps) {
-		this.config = {
-			region: config.region,
-			credentials: {
-				accessKeyId: config.accessKey,
-				secretAccessKey: config.secretKey,
-			},
-			endpoint: config.endpoint,
-			forcePathStyle: true,
-		};
+		this.endpoint = config.endpoint;
 
 		this.signedUrlExpireTimeSeconds =
 			config.signedUrlExpireTimeSeconds ?? 86400; // 24h
@@ -91,7 +82,7 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 		this.minimumMultipartUploadSize =
 			config.minimumMultipartUploadSize ?? 5 * 1024 * 1024; // 5 MB
 		this.defaultMultipartUploadSize =
-			config.defaultMultipartUploadSize ?? 10 * 1024 * 1024; // 5 MB
+			config.defaultMultipartUploadSize ?? 10 * 1024 * 1024; // 10 MB
 		this.maxFileSize = config.maxSize ?? 52428800;
 
 		// Reject values that could never work rather than failing on every request
@@ -132,7 +123,15 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 		}
 
 		this.bucket = config.bucket;
-		this.client = new S3Client(this.config);
+		this.client = new S3Client({
+			region: config.region,
+			credentials: {
+				accessKeyId: config.accessKey,
+				secretAccessKey: config.secretKey,
+			},
+			endpoint: config.endpoint,
+			forcePathStyle: true,
+		});
 
 		// Memoize expects maxAge in MS and s3 signing method in seconds.
 		// Normalization to use only seconds and therefore convert here from seconds to MS
@@ -172,7 +171,7 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 
 		try {
 			await upload.done();
-		} catch (err: any) {
+		} catch (err) {
 			resource.stream.resume();
 			if (size > this.maxFileSize) {
 				throw new webResourceHandler.FileSizeExceededError(this.maxFileSize);
@@ -203,7 +202,7 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 		return webResource;
 	}
 
-	public multipartUpload = {
+	public readonly multipartUpload = {
 		begin: async (
 			fieldName: string,
 			payload: webResourceHandler.BeginMultipartUploadPayload,
@@ -298,7 +297,7 @@ export class S3Handler implements webResourceHandler.WebResourceHandler {
 	}
 
 	private getS3URL(key: string): string {
-		return `${this.config.endpoint}/${this.bucket}/${key}`;
+		return `${this.endpoint}/${this.bucket}/${key}`;
 	}
 
 	private getKeyFromHref(href: string): string {
