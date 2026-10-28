@@ -211,7 +211,9 @@ describe('S3Handler', function () {
 				// Stubbed before constructing as the handler memoizes the method itself
 				signStub = sinon
 					.stub(S3Handler.prototype as any, 's3SignUrl')
-					.resolves('https://signed.test.com/file.txt');
+					.callsFake((fileKey) =>
+						Promise.resolve(`https://signed.test.com/${fileKey as string}`),
+					);
 			});
 
 			afterEach(function () {
@@ -227,9 +229,9 @@ describe('S3Handler', function () {
 					bucket: 'test-bucket',
 					signedUrlCacheExpireTimeSeconds,
 				});
-			const webResource = () => ({
-				href: 'https://s3.test.com/test-bucket/file.txt',
-				filename: 'file.txt',
+			const webResource = (filename = 'file.txt') => ({
+				href: `https://s3.test.com/test-bucket/${filename}`,
+				filename,
 			});
 
 			it('should reuse a signed url for the same file', async function () {
@@ -265,6 +267,32 @@ describe('S3Handler', function () {
 
 				expect(result.href).to.equal('https://signed.test.com/file.txt');
 				expect(signStub.callCount).to.equal(2);
+			});
+
+			it('should evict the least recently used url past signedUrlCacheMaxEntries', async function () {
+				const limitedS3Handler = new S3Handler({
+					region: 'us-east-1',
+					accessKey: 'test-access-key',
+					secretKey: 'test-secret-key',
+					endpoint: 'https://s3.test.com',
+					bucket: 'test-bucket',
+					signedUrlCacheMaxEntries: 2,
+				});
+
+				for (const filename of ['a', 'b', 'c']) {
+					await limitedS3Handler.onPreRespond(webResource(filename));
+					// memoizee only records a resolved url, and so evicts, on the next tick
+					await new Promise((resolve) => setImmediate(resolve));
+				}
+				expect(signStub.callCount).to.equal(3);
+
+				// 'c' is still cached whilst 'a' was evicted to make room for it
+				await limitedS3Handler.onPreRespond(webResource('c'));
+				await new Promise((resolve) => setImmediate(resolve));
+				expect(signStub.callCount).to.equal(3);
+				const result = await limitedS3Handler.onPreRespond(webResource('a'));
+				expect(signStub.callCount).to.equal(4);
+				expect(result.href).to.equal('https://signed.test.com/a');
 			});
 		});
 	});
