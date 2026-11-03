@@ -1,4 +1,16 @@
 - commits:
+    - subject: Update dependency @balena/lint to v11
+      hash: 0803845e3f43c5d05dc271054315110168de8ce4
+      body: |
+        Update @balena/lint from 9.4.15 to 11.0.0
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: balena-renovate[bot]
+  version: 2.2.8
+  title: ""
+  date: 2026-11-03T01:04:24.059Z
+- commits:
     - subject: Use primitive mode for memoizee for improved performance
       hash: 5e3e0f10c22ceee3c2efc3f48bbff89508ec543d
       body: ""
