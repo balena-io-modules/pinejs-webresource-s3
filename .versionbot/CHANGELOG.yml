@@ -1,4 +1,16 @@
 - commits:
+    - subject: Update dependency @types/sinon to v22.0.2
+      hash: b3d8776609aafdb037af227d66cd9897a231b750
+      body: |
+        Update @types/sinon from 22.0.0 to 22.0.2
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: balena-renovate[bot]
+  version: 2.2.9
+  title: ""
+  date: 2026-11-07T01:12:43.087Z
+- commits:
     - subject: Update dependency @balena/lint to v11
       hash: 0803845e3f43c5d05dc271054315110168de8ce4
       body: |
