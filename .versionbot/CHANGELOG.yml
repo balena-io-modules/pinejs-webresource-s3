@@ -1,4 +1,16 @@
 - commits:
+    - subject: Update dependency chai to v6.3.0
+      hash: cdd532e913da6e85caa3849dbaac62874b50eabe
+      body: |
+        Update chai from 6.2.2 to 6.3.0
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: balena-renovate[bot]
+  version: 2.2.10
+  title: ""
+  date: 2026-11-07T02:06:24.133Z
+- commits:
     - subject: Update dependency @types/sinon to v22.0.2
       hash: b3d8776609aafdb037af227d66cd9897a231b750
       body: |
