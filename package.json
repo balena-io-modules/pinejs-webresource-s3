@@ -31,7 +31,7 @@
     "@types/node": "20.19.43",
     "@types/sinon": "22.0.2",
     "aws-sdk-client-mock": "4.1.0",
-    "chai": "6.2.2",
+    "chai": "6.3.0",
     "chai-as-promised": "8.0.2",
     "husky": "9.1.7",
     "lint-staged": "17.6.0",
